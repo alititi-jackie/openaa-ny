@@ -62,8 +62,8 @@ const dmvExamCards = [
 const quickTools = [
   { title: 'DMV 笔试模拟', desc: '查看题库、练习模式、模拟考试与错题练习', href: '/dmv/ny/practice', Icon: BookOpen, external: false },
   { title: '罚单查询', desc: '交通罚单与处理指引', href: ticketsLink, Icon: AlertTriangle, external: false },
+  { title: 'DMV 小工具', desc: '文件检查、6 Points、REAL ID 工具', href: 'https://openaa.com/tool/dmv/document-checker.html', Icon: Car, external: true },
   { title: '驾照申请', desc: 'Learner Permit 官方入口', href: 'https://dmv.ny.gov/driver-license/get-learner-permit', Icon: FileText, external: true },
-  { title: '车辆注册', desc: '车辆注册与牌照流程', href: 'https://dmv.ny.gov/registration/register-and-title-vehicle-new-york-state', Icon: Car, external: true },
   { title: '驾照更新', desc: '到期续期与资料要求', href: 'https://dmv.ny.gov/driver-license/renew-license', Icon: RefreshCw, external: true },
   { title: '地址变更', desc: '搬家后地址更新入口', href: 'https://dmv.ny.gov/address-change/how-change-your-address', Icon: MapPin, external: true },
 ]
