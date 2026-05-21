@@ -5,7 +5,7 @@ import BottomNav from '@/components/BottomNav'
 import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
-  title: 'OpenAA – 纽约华人生活圈',
+  title: 'OpenAA – 纽约站 – 华人生活圈',
   description: '纽约华人综合服务平台 — 招聘·房屋·二手·DMV·新闻',
   metadataBase: new URL(SITE_URL),
   manifest: '/manifest.webmanifest',
