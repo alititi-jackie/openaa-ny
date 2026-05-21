@@ -11,7 +11,7 @@ const HOME_CANONICAL = getSiteUrl('/')
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'OpenAA｜美国华人生活入口｜华人招聘、房屋、二手、DMV、本地服务',
+  title: 'OpenAA｜纽约站｜美国华人生活入口｜华人招聘、房屋、二手、DMV、本地服务',
   description:
     'OpenAA 是面向美国华人的生活信息平台，提供华人招聘、找工作、房屋租售、二手市场、DMV 驾照信息、本地服务、新闻资讯和实用导航，帮助美国华人和美华人更方便地生活、找工作、找房子和获取本地信息。',
   alternates: {
