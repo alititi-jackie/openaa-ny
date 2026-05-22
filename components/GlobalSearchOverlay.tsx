@@ -103,6 +103,15 @@ export default function GlobalSearchOverlay({ isOpen, onClose }: GlobalSearchOve
           </div>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="关闭"
+        className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[120] rounded-full border border-zinc-200 bg-white px-6 py-2 text-sm font-medium text-zinc-700 shadow-md active:bg-zinc-100"
+      >
+        关闭
+      </button>
     </div>,
     document.body,
   )
