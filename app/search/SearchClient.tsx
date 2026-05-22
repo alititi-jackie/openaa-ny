@@ -39,21 +39,18 @@ export default function SearchClient() {
       </div>
 
       {/* Search content */}
-      <div className="w-full overflow-x-hidden px-4 pt-4 pb-24">
+      <div className="w-full overflow-x-hidden px-4 pt-4 pb-40">
         <SearchContent />
-
-        {/* Bottom centered close button, above BottomNav */}
-        <div className="mt-6 flex justify-center">
-          <button
-            type="button"
-            onClick={handleClose}
-            aria-label="关闭搜索"
-            className="rounded-full border border-zinc-200 bg-zinc-50 px-6 py-2 text-sm font-medium text-zinc-700 shadow-sm transition-colors active:bg-zinc-100"
-          >
-            关闭
-          </button>
-        </div>
       </div>
+
+      <button
+        type="button"
+        onClick={handleClose}
+        aria-label="关闭搜索"
+        className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full border border-zinc-200 bg-white px-6 py-2 text-sm font-medium text-zinc-700 shadow-md transition-colors active:bg-zinc-100"
+      >
+        关闭
+      </button>
     </>
   )
 }
