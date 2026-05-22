@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, X } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import SearchContent from '@/components/SearchContent'
 
 export default function SearchClient() {
@@ -17,7 +17,7 @@ export default function SearchClient() {
 
   return (
     <>
-      {/* Sticky top bar: back arrow (left) | title (center) | X close (right) */}
+      {/* Sticky top bar: back arrow (left) | title (center) */}
       <div className="sticky top-14 z-30 flex h-14 items-center border-b border-zinc-100 bg-white px-2">
         {/* Left: back arrow */}
         <button
@@ -34,20 +34,25 @@ export default function SearchClient() {
           OpenAA 站内搜索
         </h1>
 
-        {/* Right: X close button */}
-        <button
-          type="button"
-          onClick={handleClose}
-          aria-label="关闭搜索"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white transition-colors active:bg-zinc-50"
-        >
-          <X size={20} className="text-zinc-700" />
-        </button>
+        {/* Right: spacer to balance the left button */}
+        <div className="h-11 w-11 shrink-0" />
       </div>
 
       {/* Search content */}
-      <div className="w-full overflow-x-hidden px-4 pt-4">
+      <div className="w-full overflow-x-hidden px-4 pt-4 pb-24">
         <SearchContent />
+
+        {/* Bottom centered close button, above BottomNav */}
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={handleClose}
+            aria-label="关闭搜索"
+            className="rounded-full border border-zinc-200 bg-zinc-50 px-6 py-2 text-sm font-medium text-zinc-700 shadow-sm transition-colors active:bg-zinc-100"
+          >
+            关闭
+          </button>
+        </div>
       </div>
     </>
   )
