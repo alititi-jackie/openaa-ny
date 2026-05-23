@@ -180,6 +180,9 @@ async function getLatestPostsData() {
   const nowIso = new Date().toISOString()
   const nowTime = Date.now()
 
+  console.log('[home] nowIso:', nowIso)
+  console.log('[home] sections:', sections.length)
+
   const mainLimit = (key: string, fallback: number) => {
     const value = sectionMap.get(key)?.limit_count
     return typeof value === 'number' && value > 0 ? Math.min(30, value) : fallback
@@ -274,6 +277,9 @@ async function getLatestPostsData() {
       : Promise.resolve([]),
   ])
 
+  console.log('[home] housingsData:', housingsData?.length)
+  console.log('[home] servicesData:', servicesData?.length)
+
   const latestNewsVisible = sectionMap.get('latest_news')?.is_visible === true
   const latestNewsLimit = mainLimit('latest_news', 15)
   const newsCategorySections = sections
@@ -339,12 +345,18 @@ async function getLatestPostsData() {
     }
   }
 
+  const housings = ((housingsData as LatestHousing[]) ?? []).filter((row) => isPublicOwnerVisible(row.user))
+  const services = ((servicesData as LatestService[]) ?? []).filter((row) => isPublicOwnerVisible(row.user))
+
+  console.log('[home] housings final:', housings.length)
+  console.log('[home] services final:', services.length)
+
   return {
     sections,
     jobs: ((jobsData as LatestJob[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
     items: ((secondhandData as LatestSecondhand[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
-    housings: ((housingsData as LatestHousing[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
-    services: ((servicesData as LatestService[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
+    housings,
+    services,
     news: [...pinnedNews, ...normalNews].slice(0, latestNewsLimit),
   }
 }
