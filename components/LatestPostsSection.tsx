@@ -162,6 +162,8 @@ async function fetchPinnedFirst<T extends { id: string | number }>(
 }
 
 async function getLatestPostsData() {
+  const DEBUG_RAW = true
+
   const sections = await getHomeLatestSections()
   const supabase = getPublicSupabaseServerClient()
 
@@ -188,94 +190,120 @@ async function getLatestPostsData() {
     return typeof value === 'number' && value > 0 ? Math.min(30, value) : fallback
   }
 
-  const [jobsData, housingsData, secondhandData, servicesData] = await Promise.all([
-    sectionMap.get('latest_jobs')?.is_visible
-      ? fetchPinnedFirst(
-          supabase
-            .from('job_postings')
-            .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .eq('is_pinned', true)
-            .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
-            .order('pinned_order', { ascending: true })
-            .order('created_at', { ascending: false })
-            .limit(30),
-          supabase
-            .from('job_postings')
-            .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .limit(30),
-          mainLimit('latest_jobs', 6)
-        )
-      : Promise.resolve([]),
-    sectionMap.get('latest_housing')?.is_visible
-      ? fetchPinnedFirst(
-          supabase
-            .from('housing_posts')
-            .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .eq('is_pinned', true)
-            .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
-            .order('pinned_order', { ascending: true })
-            .order('created_at', { ascending: false })
-            .limit(30),
-          supabase
-            .from('housing_posts')
-            .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .limit(30),
-          mainLimit('latest_housing', 6)
-        )
-      : Promise.resolve([]),
-    sectionMap.get('latest_secondhand')?.is_visible
-      ? fetchPinnedFirst(
-          supabase
-            .from('secondhand_items')
-            .select('id, title, category, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .eq('is_pinned', true)
-            .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
-            .order('pinned_order', { ascending: true })
-            .order('created_at', { ascending: false })
-            .limit(30),
-          supabase
-            .from('secondhand_items')
-            .select('id, title, category, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .limit(30),
-          mainLimit('latest_secondhand', 6)
-        )
-      : Promise.resolve([]),
-    sectionMap.get('latest_services')?.is_visible
-      ? fetchPinnedFirst(
-          supabase
-            .from('service_posts')
-            .select(
-              'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
+  const [jobsData, housingsData, secondhandData, servicesData] = DEBUG_RAW
+    ? await Promise.all([
+        Promise.resolve([]),
+        sectionMap.get('latest_housing')?.is_visible
+          ? supabase
+              .from('housing_posts')
+              .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
+              .eq('status', 'published')
+              .order('created_at', { ascending: false })
+              .limit(30)
+              .then((res) => res.data ?? [])
+          : Promise.resolve([]),
+        Promise.resolve([]),
+        sectionMap.get('latest_services')?.is_visible
+          ? supabase
+              .from('service_posts')
+              .select(
+                'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
+              )
+              .eq('status', 'active')
+              .eq('is_active', true)
+              .order('created_at', { ascending: false })
+              .limit(30)
+              .then((res) => res.data ?? [])
+          : Promise.resolve([]),
+      ])
+    : await Promise.all([
+        sectionMap.get('latest_jobs')?.is_visible
+          ? fetchPinnedFirst(
+              supabase
+                .from('job_postings')
+                .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
+                .eq('status', 'published')
+                .eq('is_pinned', true)
+                .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
+                .order('pinned_order', { ascending: true })
+                .order('created_at', { ascending: false })
+                .limit(30),
+              supabase
+                .from('job_postings')
+                .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
+                .eq('status', 'published')
+                .order('created_at', { ascending: false })
+                .limit(30),
+              mainLimit('latest_jobs', 6)
             )
-            .eq('status', 'active')
-            .eq('is_active', true)
-            .eq('is_pinned', true)
-            .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
-            .order('pinned_order', { ascending: true })
-            .order('created_at', { ascending: false })
-            .limit(30),
-          supabase
-            .from('service_posts')
-            .select(
-              'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
+          : Promise.resolve([]),
+        sectionMap.get('latest_housing')?.is_visible
+          ? fetchPinnedFirst(
+              supabase
+                .from('housing_posts')
+                .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
+                .eq('status', 'published')
+                .eq('is_pinned', true)
+                .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
+                .order('pinned_order', { ascending: true })
+                .order('created_at', { ascending: false })
+                .limit(30),
+              supabase
+                .from('housing_posts')
+                .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
+                .eq('status', 'published')
+                .order('created_at', { ascending: false })
+                .limit(30),
+              mainLimit('latest_housing', 6)
             )
-            .eq('status', 'active')
-            .eq('is_active', true)
-            .order('created_at', { ascending: false })
-            .limit(30),
-          mainLimit('latest_services', 6)
-        )
-      : Promise.resolve([]),
-  ])
+          : Promise.resolve([]),
+        sectionMap.get('latest_secondhand')?.is_visible
+          ? fetchPinnedFirst(
+              supabase
+                .from('secondhand_items')
+                .select('id, title, category, created_at, is_pinned, pinned_until, user:users(status)')
+                .eq('status', 'published')
+                .eq('is_pinned', true)
+                .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
+                .order('pinned_order', { ascending: true })
+                .order('created_at', { ascending: false })
+                .limit(30),
+              supabase
+                .from('secondhand_items')
+                .select('id, title, category, created_at, is_pinned, pinned_until, user:users(status)')
+                .eq('status', 'published')
+                .order('created_at', { ascending: false })
+                .limit(30),
+              mainLimit('latest_secondhand', 6)
+            )
+          : Promise.resolve([]),
+        sectionMap.get('latest_services')?.is_visible
+          ? fetchPinnedFirst(
+              supabase
+                .from('service_posts')
+                .select(
+                  'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
+                )
+                .eq('status', 'active')
+                .eq('is_active', true)
+                .eq('is_pinned', true)
+                .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
+                .order('pinned_order', { ascending: true })
+                .order('created_at', { ascending: false })
+                .limit(30),
+              supabase
+                .from('service_posts')
+                .select(
+                  'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
+                )
+                .eq('status', 'active')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+                .limit(30),
+              mainLimit('latest_services', 6)
+            )
+          : Promise.resolve([]),
+      ])
 
   console.log('[home] housingsData:', housingsData?.length)
   console.log('[home] servicesData:', servicesData?.length)
@@ -283,8 +311,8 @@ async function getLatestPostsData() {
   // new debug logs (raw structures + join + user filter signals)
   console.log('[home] housingsData raw:', housingsData)
   console.log('[home] servicesData raw:', servicesData)
-  console.log('[home] sample housing user:', housingsData?.[0]?.user)
-  console.log('[home] sample service user:', servicesData?.[0]?.user)
+  console.log('[home] sample housing user:', (housingsData as LatestHousing[])?.[0]?.user)
+  console.log('[home] sample service user:', (servicesData as LatestService[])?.[0]?.user)
 
   const latestNewsVisible = sectionMap.get('latest_news')?.is_visible === true
   const latestNewsLimit = mainLimit('latest_news', 15)
@@ -351,12 +379,24 @@ async function getLatestPostsData() {
     }
   }
 
-  const housings = ((housingsData as LatestHousing[]) ?? []).filter((row) => isPublicOwnerVisible(row.user))
-  const services = ((servicesData as LatestService[]) ?? []).filter((row) => isPublicOwnerVisible(row.user))
+  const housings = DEBUG_RAW
+    ? (((housingsData as LatestHousing[]) ?? []) as LatestHousing[])
+    : (((housingsData as LatestHousing[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)) as LatestHousing[])
 
-  console.log('[home] housings before user filter:', housingsData?.length)
+  const services = DEBUG_RAW
+    ? (((servicesData as LatestService[]) ?? []) as LatestService[])
+    : (((servicesData as LatestService[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)) as LatestService[])
+
+  if (DEBUG_RAW) {
+    console.log('[DEBUG RAW MODE]', {
+      housingsCount: housings.length,
+      servicesCount: services.length,
+    })
+  }
+
+  console.log('[home] housings before user filter:', (housingsData as LatestHousing[])?.length)
   console.log('[home] housings after user filter:', housings.length)
-  console.log('[home] services before user filter:', servicesData?.length)
+  console.log('[home] services before user filter:', (servicesData as LatestService[])?.length)
   console.log('[home] services after user filter:', services.length)
 
   console.log('[home] housings final:', housings.length)
