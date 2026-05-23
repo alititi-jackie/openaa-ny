@@ -4,13 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import AppTopSection from '@/components/AppTopSection'
 import BackToTopButton from '@/components/BackToTopButton'
-import DetailBackButton from '@/components/DetailBackButton'
-import ShareButton from '@/components/ShareButton'
 import RegionFilter, { ALL_REGIONS } from '@/components/RegionFilter'
-import ChannelSeoSection from '@/components/ChannelSeoSection'
 import type { HousingPost, HousingPostType } from '@/types'
-
-export const revalidate = 0
 
 const TABS: Array<{ key: HousingPostType; label: string }> = [
   { key: 'renting', label: '房源信息' },
@@ -172,11 +167,6 @@ export default function HousingPage() {
       <AppTopSection bannerPosition="housing" />
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="mb-6 flex items-center justify-between">
-          <DetailBackButton fallbackHref="/" label="← 返回首页" inToolbar forceHref />
-          <ShareButton path="/housing" title="OpenAA 房屋租售频道" text="纽约房屋租售、求租求购信息频道。" />
-        </div>
-
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
           <Link
@@ -292,12 +282,6 @@ export default function HousingPage() {
             })}
           </div>
         )}
-
-        <ChannelSeoSection
-          title="纽约租房与华人房屋信息指南"
-          paragraphs={[]}
-          highlights={['适合用户：纽约租房人群、法拉盛与皇后区通勤家庭、华人房东与租客', '核心功能：房源/求租切换、关键词与地区筛选、时间排�[...]
-        />
       </div>
       <BackToTopButton />
     </div>
