@@ -280,6 +280,12 @@ async function getLatestPostsData() {
   console.log('[home] housingsData:', housingsData?.length)
   console.log('[home] servicesData:', servicesData?.length)
 
+  // new debug logs (raw structures + join + user filter signals)
+  console.log('[home] housingsData raw:', housingsData)
+  console.log('[home] servicesData raw:', servicesData)
+  console.log('[home] sample housing user:', housingsData?.[0]?.user)
+  console.log('[home] sample service user:', servicesData?.[0]?.user)
+
   const latestNewsVisible = sectionMap.get('latest_news')?.is_visible === true
   const latestNewsLimit = mainLimit('latest_news', 15)
   const newsCategorySections = sections
@@ -347,6 +353,11 @@ async function getLatestPostsData() {
 
   const housings = ((housingsData as LatestHousing[]) ?? []).filter((row) => isPublicOwnerVisible(row.user))
   const services = ((servicesData as LatestService[]) ?? []).filter((row) => isPublicOwnerVisible(row.user))
+
+  console.log('[home] housings before user filter:', housingsData?.length)
+  console.log('[home] housings after user filter:', housings.length)
+  console.log('[home] services before user filter:', servicesData?.length)
+  console.log('[home] services after user filter:', services.length)
 
   console.log('[home] housings final:', housings.length)
   console.log('[home] services final:', services.length)
