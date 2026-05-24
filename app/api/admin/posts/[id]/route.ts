@@ -7,6 +7,7 @@ const TABLE_MAP = {
   jobs: 'job_postings',
   housing: 'housing_posts',
   secondhand: 'secondhand_items',
+  services: 'service_posts',
 } as const
 
 type PostModule = keyof typeof TABLE_MAP
@@ -46,6 +47,11 @@ function toPinnedUntil(value: unknown): string | null | undefined {
   return parsed.toISOString()
 }
 
+function normalizeServiceResponse<T extends Record<string, unknown>>(data: T, isServicePost: boolean): T {
+  if (!isServicePost || data.status !== 'active') return data
+  return { ...data, status: 'published' }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -62,7 +68,7 @@ export async function PATCH(
   }
 
   const { module, status, is_pinned, pinned_order, pinned_until } = body as {
-    module?: string
+    module?: PostModule
     status?: string
     is_pinned?: boolean
     pinned_order?: number
@@ -70,7 +76,7 @@ export async function PATCH(
   }
 
   if (!module || !Object.keys(TABLE_MAP).includes(module)) {
-    return NextResponse.json({ error: '无效的模块名，必须为 jobs、housing 或 secondhand' }, { status: 400 })
+    return NextResponse.json({ error: '无效的模块名，必须为 jobs、housing、secondhand 或 services' }, { status: 400 })
   }
 
   if (status !== undefined && !(VALID_STATUSES as readonly string[]).includes(status)) {
@@ -105,6 +111,8 @@ export async function PATCH(
 
   const table = TABLE_MAP[module as PostModule]
   const supabase = getServiceClient()
+  const isServicePost = module === 'services'
+  const dbStatus = isServicePost && status === 'published' ? 'active' : status
 
   // Prevent setting is_pinned=true on a non-published post.
   if (is_pinned === true) {
@@ -118,14 +126,16 @@ export async function PATCH(
         .select('status')
         .eq('id', id)
         .single()
-      if (!currentPost || (currentPost as { status: string }).status !== 'published') {
+      const currentStatus = (currentPost as { status: string } | null)?.status
+      const currentIsVisible = isServicePost ? currentStatus === 'active' : currentStatus === 'published'
+      if (!currentPost || !currentIsVisible) {
         return NextResponse.json({ error: '只有显示中的帖子才能设置置顶。' }, { status: 400 })
       }
     }
   }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
-  if (status !== undefined) updates.status = status
+  if (dbStatus !== undefined) updates.status = dbStatus
   if (is_pinned !== undefined) updates.is_pinned = is_pinned
   if (normalizedPinnedOrder !== undefined) updates.pinned_order = normalizedPinnedOrder
   if (normalizedPinnedUntil !== undefined) updates.pinned_until = normalizedPinnedUntil
@@ -145,5 +155,5 @@ export async function PATCH(
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json({ data })
+  return NextResponse.json({ data: normalizeServiceResponse(data as Record<string, unknown>, isServicePost) })
 }

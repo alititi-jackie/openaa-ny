@@ -29,6 +29,8 @@ const STATUS_FILTERS = [
 const LOCATION_FILTER_OPTIONS = ['全部地区', ...LOCATION_OPTIONS] as const
 
 type ModuleFilter = 'all' | 'jobs' | 'housing' | 'secondhand' | 'services'
+type AdminPostModule = Exclude<ModuleFilter, 'all'>
+type AdminUnifiedPost = Omit<UnifiedPost, 'module'> & { module: AdminPostModule }
 type StatusFilter = 'all' | 'published' | 'hidden' | 'deleted'
 type OpenFilterKey = 'module' | 'location' | 'status' | null
 type PinFormState = {
@@ -101,14 +103,14 @@ function statusBadge(status: string) {
   )
 }
 
-function moduleDetailHref(post: UnifiedPost): string {
+function moduleDetailHref(post: AdminUnifiedPost): string {
   if (post.module === 'jobs') return `/jobs/${post.id}?from_admin=1&return_to=/admin/posts`
   if (post.module === 'housing') return `/housing/${post.id}?from_admin=1&return_to=/admin/posts`
   if (post.module === 'services') return `/services/${post.id}?from_admin=1&return_to=/admin/posts`
   return `/secondhand/${post.id}?from_admin=1&return_to=/admin/posts`
 }
 
-function typeLabel(post: UnifiedPost): string | null {
+function typeLabel(post: AdminUnifiedPost): string | null {
   if (post.module === 'jobs') {
     return post.type === 'seeking' ? '求职' : '招聘'
   }
@@ -118,12 +120,18 @@ function typeLabel(post: UnifiedPost): string | null {
   if (post.module === 'secondhand') {
     return post.type === 'buying' ? '求购' : '出售'
   }
+  if (post.module === 'services') {
+    return post.type || null
+  }
   return null
 }
 
-function formatPrice(post: UnifiedPost): string | null {
+function formatPrice(post: AdminUnifiedPost): string | null {
   if (post.module === 'jobs') {
     return formatSalary(post.salary_min, post.salary_max, post.salary_unit)
+  }
+  if (post.module === 'services') {
+    return null
   }
   const v = post.price_value
   if (v == null || v <= 0) return null
@@ -149,7 +157,7 @@ function toSortableTime(value: string | null | undefined): number {
   return Number.isNaN(time) ? 0 : time
 }
 
-function isEffectivePinned(post: UnifiedPost, nowTime: number): boolean {
+function isEffectivePinned(post: AdminUnifiedPost, nowTime: number): boolean {
   if (!post.is_pinned) return false
   if (post.status !== 'published') return false
   if (!post.pinned_until) return true
@@ -182,7 +190,7 @@ function AdminPostsContent() {
   const [inputToken, setInputToken] = useState('')
   const [isUsingUnifiedToken, setIsUsingUnifiedToken] = useState(false)
   const [showTokenEditor, setShowTokenEditor] = useState(false)
-  const [posts, setPosts] = useState<UnifiedPost[]>([])
+  const [posts, setPosts] = useState<AdminUnifiedPost[]>([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [listSuccessMessage, setListSuccessMessage] = useState('')
@@ -191,7 +199,7 @@ function AdminPostsContent() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [locationFilter, setLocationFilter] = useState('全部地区')
   const [openFilterKey, setOpenFilterKey] = useState<OpenFilterKey>(null)
-  const [pinEditingPost, setPinEditingPost] = useState<UnifiedPost | null>(null)
+  const [pinEditingPost, setPinEditingPost] = useState<AdminUnifiedPost | null>(null)
   const [pinForm, setPinForm] = useState<PinFormState>({
     is_pinned: false,
     pinned_order: 0,
@@ -215,7 +223,7 @@ function AdminPostsContent() {
         'data' in json &&
         Array.isArray((json as Record<string, unknown>).data)
       ) {
-        setPosts((json as { data: UnifiedPost[] }).data)
+        setPosts((json as { data: AdminUnifiedPost[] }).data)
         const warnings = (json as { warnings?: string[] }).warnings
         if (warnings && warnings.length > 0) {
           setMessage(`部分模块加载失败：${warnings.join('；')}`)
@@ -272,7 +280,7 @@ function AdminPostsContent() {
     })
   }
 
-  function startPinSettings(post: UnifiedPost) {
+  function startPinSettings(post: AdminUnifiedPost) {
     setPinEditingPost(post)
     setPinForm({
       is_pinned: post.is_pinned === true,
@@ -287,7 +295,7 @@ function AdminPostsContent() {
     scrollToForm()
   }
 
-  async function updatePost(post: UnifiedPost, payload: Record<string, unknown>) {
+  async function updatePost(post: AdminUnifiedPost, payload: Record<string, unknown>) {
     try {
       const res = await fetch(`/api/admin/posts/${post.id}`, {
         method: 'PATCH',
@@ -328,7 +336,7 @@ function AdminPostsContent() {
     }
   }
 
-  async function handleHide(post: UnifiedPost) {
+  async function handleHide(post: AdminUnifiedPost) {
     const ok = await updatePost(post, { status: 'hidden' })
     if (ok) {
       setListSuccessMessage('已隐藏')
@@ -336,7 +344,7 @@ function AdminPostsContent() {
     }
   }
 
-  async function handleRestore(post: UnifiedPost) {
+  async function handleRestore(post: AdminUnifiedPost) {
     const ok = await updatePost(post, { status: 'published' })
     if (ok) {
       setListSuccessMessage('已恢复显示')
@@ -344,8 +352,16 @@ function AdminPostsContent() {
     }
   }
 
-  async function handleDelete(post: UnifiedPost) {
-    if (!confirm(`确认删除此${post.module === 'jobs' ? '招聘' : post.module === 'housing' ? '房屋' : post.module === 'services' ? '本地服务' : '二手'}帖子？`)) {
+  async function handleDelete(post: AdminUnifiedPost) {
+    const moduleName =
+      post.module === 'jobs'
+        ? '招聘'
+        : post.module === 'housing'
+          ? '房屋'
+          : post.module === 'services'
+            ? '本地服务'
+            : '二手'
+    if (!confirm(`确认删除此${moduleName}帖子？`)) {
       return
     }
     const ok = await updatePost(post, { status: 'deleted' })
@@ -396,7 +412,9 @@ function AdminPostsContent() {
         const matchSearch =
           !q ||
           (p.title || '').toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q) ||
           (p.location || '').toLowerCase().includes(q) ||
+          (p.type || '').toLowerCase().includes(q) ||
           (p.contact_name || '').toLowerCase().includes(q) ||
           (p.phone || '').toLowerCase().includes(q) ||
           (p.wechat || '').toLowerCase().includes(q)

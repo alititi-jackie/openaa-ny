@@ -107,12 +107,12 @@ export interface HousingPost {
   pinned_order?: number
 }
 
-export type PostModule = 'jobs' | 'housing' | 'secondhand'
+export type PostModule = 'jobs' | 'housing' | 'secondhand' | 'services'
 
 export type UnifiedPostStatus = 'published' | 'hidden' | 'deleted' | 'unpublished'
 
 export interface UnifiedPost {
-  id: number
+  id: number | string
   module: PostModule
   user_id: string
   title: string

@@ -4,6 +4,8 @@ import type { UnifiedPost } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
+type AdminPostModule = UnifiedPost['module']
+
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,24 +41,39 @@ function isEffectivePinned(post: UnifiedPost, nowTime: number): boolean {
   return toSortableTime(post.pinned_until) > nowTime
 }
 
+function normalizeServiceStatus(status: unknown): UnifiedPost['status'] {
+  if (status === 'hidden' || status === 'deleted' || status === 'unpublished') return status
+  return 'published'
+}
+
 export async function GET(request: NextRequest) {
   if (!checkAdminToken(request)) {
     return NextResponse.json({ error: '未授权' }, { status: 401 })
   }
 
   const { searchParams } = new URL(request.url)
-  const moduleFilter = searchParams.get('module') // 'all' | 'jobs' | 'housing' | 'secondhand'
+  const moduleParam = searchParams.get('module')
+  const moduleFilter =
+    moduleParam === 'jobs' ||
+    moduleParam === 'housing' ||
+    moduleParam === 'secondhand' ||
+    moduleParam === 'services' ||
+    moduleParam === 'all'
+      ? moduleParam
+      : null
   const userIdFilter = searchParams.get('user_id')?.trim()
 
   const supabase = getServiceClient()
   const results: UnifiedPost[] = []
   const fetchErrors: string[] = []
 
-  const wantJobs = !moduleFilter || moduleFilter === 'all' || moduleFilter === 'jobs'
-  const wantHousing = !moduleFilter || moduleFilter === 'all' || moduleFilter === 'housing'
-  const wantSecondhand = !moduleFilter || moduleFilter === 'all' || moduleFilter === 'secondhand'
+  const wantJobs = !moduleFilter || moduleFilter === 'all' || moduleFilter === ('jobs' satisfies AdminPostModule)
+  const wantHousing = !moduleFilter || moduleFilter === 'all' || moduleFilter === ('housing' satisfies AdminPostModule)
+  const wantSecondhand =
+    !moduleFilter || moduleFilter === 'all' || moduleFilter === ('secondhand' satisfies AdminPostModule)
+  const wantServices = !moduleFilter || moduleFilter === 'all' || moduleFilter === ('services' satisfies AdminPostModule)
 
-  const [jobsResult, housingResult, secondhandResult] = await Promise.all([
+  const [jobsResult, housingResult, secondhandResult, servicesResult] = await Promise.all([
     wantJobs
       ? (() => {
           const query = supabase
@@ -82,6 +99,18 @@ export async function GET(request: NextRequest) {
           const query = supabase
             .from('secondhand_items')
             .select('*')
+            .order('created_at', { ascending: false })
+          return userIdFilter ? query.eq('user_id', userIdFilter) : query
+        })()
+      : Promise.resolve({ data: null, error: null }),
+
+    wantServices
+      ? (() => {
+          const query = supabase
+            .from('service_posts')
+            .select(
+              'id, title, description, location, category, contact_name, phone, wechat, status, is_active, created_at, updated_at, user_id, images, is_pinned, pinned_until, pinned_order'
+            )
             .order('created_at', { ascending: false })
           return userIdFilter ? query.eq('user_id', userIdFilter) : query
         })()
@@ -181,6 +210,41 @@ export async function GET(request: NextRequest) {
         phone: (row.phone as string | null) || null,
         wechat: (row.wechat as string | null) || null,
         price_value: row.price != null ? Number(row.price) : null,
+        salary_min: null,
+        salary_max: null,
+        salary_unit: null,
+        images,
+        created_at: (row.created_at as string) || '',
+        updated_at: (row.updated_at as string) || '',
+        is_pinned: row.is_pinned === true,
+        pinned_until: (row.pinned_until as string | null) || null,
+        pinned_order:
+          typeof row.pinned_order === 'number' && Number.isInteger(row.pinned_order) && row.pinned_order >= 0
+            ? row.pinned_order
+            : 0,
+      })
+    }
+  }
+
+  if (servicesResult.error) {
+    fetchErrors.push(`本地服务: ${servicesResult.error.message}`)
+  } else if (servicesResult.data) {
+    for (const row of servicesResult.data) {
+      const rawImages = row.images
+      const images: string[] | null = Array.isArray(rawImages) ? (rawImages as string[]) : null
+      results.push({
+        id: row.id as string,
+        module: 'services',
+        user_id: row.user_id as string,
+        title: (row.title as string) || '',
+        description: (row.description as string) || '',
+        location: (row.location as string | null) || null,
+        status: normalizeServiceStatus(row.status),
+        type: (row.category as string | null) || null,
+        contact_name: (row.contact_name as string | null) || null,
+        phone: (row.phone as string | null) || null,
+        wechat: (row.wechat as string | null) || null,
+        price_value: null,
         salary_min: null,
         salary_max: null,
         salary_unit: null,
