@@ -1,0 +1,111 @@
+'use client'
+
+import PostSafetyNotice from '@/components/PostSafetyNotice'
+import AdminReturnButton from '@/components/AdminReturnButton'
+import DetailBackButton from '@/components/DetailBackButton'
+import BackToTopButton from '@/components/BackToTopButton'
+import ContactInfoCard from '@/components/ContactInfoCard'
+import DetailShareCard from '@/components/DetailShareCard'
+import ShareButton from '@/components/ShareButton'
+import { formatDate, formatSalary, formatJobLocation } from '@/lib/utils'
+import type { JobPosting } from '@/types'
+import { useState } from 'react'
+
+export default function JobDetailClient({ job }: { job: JobPosting }) {
+  const [showContactInfo, setShowContactInfo] = useState(false)
+  const salary = formatSalary(job.salary_min, job.salary_max, job.salary_unit)
+  const companyName = job.company?.trim() || ''
+  const hasContactInfo = Boolean((job.contact_name || '').trim() || (job.phone || '').trim() || (job.wechat || '').trim())
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
+      <AdminReturnButton />
+      <div className="flex items-center justify-between">
+        <DetailBackButton fallbackHref="/jobs" inToolbar />
+        <ShareButton
+          path={`/jobs/${String(job.id)}`}
+          title={job.title}
+          text={`${job.job_type} · ${formatJobLocation(job.location)}${salary ? ` · ${salary}` : ''}`}
+        />
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
+            {companyName && companyName !== '匿名发布' ? (
+              <p className="text-lg text-gray-600 mt-1">{companyName}</p>
+            ) : null}
+          </div>
+          <span className="bg-blue-50 text-[#1976d2] px-3 py-1 rounded-full text-sm font-medium">
+            {job.job_type}
+          </span>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="bg-green-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500">薪资</p>
+            <p className="font-semibold text-green-600">{salary}</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <p className="text-xs text-gray-500">工作地点</p>
+            <p className="font-semibold text-gray-900">📍 {formatJobLocation(job.location)}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 mt-3 text-sm text-gray-500">
+          <span className="bg-gray-100 px-2 py-1 rounded">{job.category}</span>
+          <span>👁 {job.views || 0} 次浏览</span>
+          <span>{formatDate(job.created_at)}</span>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-gray-100">
+          <h2 className="font-semibold text-gray-900 mb-3">职位描述</h2>
+          <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">{job.description}</p>
+
+          <PostSafetyNotice variant="contact" />
+        </div>
+
+        {hasContactInfo ? (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            {showContactInfo ? (
+              <ContactInfoCard
+                title="联系招聘方"
+                contactName={job.contact_name}
+                phone={job.phone}
+                wechat={job.wechat}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowContactInfo(true)}
+                className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-4 text-center text-base font-medium text-blue-600"
+              >
+                查看联系方式
+              </button>
+            )}
+          </div>
+        ) : null}
+
+        <DetailShareCard
+          path={`/jobs/${String(job.id)}`}
+          title={job.title}
+          text={`${job.job_type} · ${formatJobLocation(job.location)}${salary ? ` · ${salary}` : ''}`}
+        />
+
+        <div className="mt-6 pt-4 border-t border-gray-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#1976d2] flex items-center justify-center text-white font-bold">
+            {job.user?.username?.[0]?.toUpperCase() ?? '?'}
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">{job.user?.username ?? '匿名用户'}</p>
+            <p className="text-xs text-gray-500">发布者</p>
+          </div>
+        </div>
+
+        <PostSafetyNotice variant="safety" />
+      </div>
+      <BackToTopButton />
+    </div>
+  )
+}
