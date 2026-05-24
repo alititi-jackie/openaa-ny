@@ -2,7 +2,12 @@
 import Link from 'next/link'
 import { MapPin, ChevronRight, Clock } from 'lucide-react'
 import { formatJobLocation } from '@/lib/utils'
-import { DEFAULT_HOME_LATEST_SECTIONS, MAIN_SECTION_ROUTE } from '@/lib/homeSections'
+import {
+  DEFAULT_HOME_LATEST_SECTIONS,
+  MAIN_SECTION_ROUTE,
+  normalizeHomeLatestSection,
+  type HomeLatestSection,
+} from '@/lib/homeSections'
 import { SITE_URL } from '@/lib/site'
 
 type LatestJob = {
@@ -93,18 +98,27 @@ function getNewsSummary(item: LatestNews) {
   return plain.length > 60 ? `${plain.slice(0, 60)}...` : plain
 }
 
+function getValidSections(input: unknown): HomeLatestSection[] {
+  if (!Array.isArray(input)) return []
+  return input
+    .map((section) => normalizeHomeLatestSection(section as Partial<HomeLatestSection>))
+    .filter((section): section is HomeLatestSection => section !== null)
+}
+
 export default async function LatestPostsSection() {
-  const fallback = { jobs: [], housing: [], services: [], secondhand: [], news: [] }
+  const fallback = { sections: DEFAULT_HOME_LATEST_SECTIONS, jobs: [], housing: [], services: [], secondhand: [], news: [] }
   try {
     const res = await fetch(`${SITE_URL}/api/home-latest-posts`, { cache: 'no-store' })
     if (!res.ok) throw new Error('home-latest-posts fetch failed')
-    const { jobs, housing, services, secondhand, news } = (await res.json()) as {
+    const { sections, jobs, housing, services, secondhand, news } = (await res.json()) as {
+      sections?: unknown
       jobs?: LatestJob[]
       housing?: LatestHousing[]
       services?: LatestService[]
       secondhand?: LatestSecondhand[]
       news?: LatestNews[]
     }
+    const safeSections = getValidSections(sections)
     const safeJobs = Array.isArray(jobs) ? jobs : fallback.jobs
     const safeHousing = Array.isArray(housing) ? housing : fallback.housing
     const safeServices = Array.isArray(services) ? services : fallback.services
@@ -112,6 +126,7 @@ export default async function LatestPostsSection() {
     const safeNews = Array.isArray(news) ? news : fallback.news
 
     return renderLatestPostsSection({
+      sections: safeSections.length > 0 ? safeSections : fallback.sections,
       jobs: safeJobs,
       housing: safeHousing,
       services: safeServices,
@@ -124,19 +139,21 @@ export default async function LatestPostsSection() {
 }
 
 function renderLatestPostsSection({
+  sections,
   jobs,
   housing,
   services,
   secondhand,
   news,
 }: {
+  sections: HomeLatestSection[]
   jobs: LatestJob[]
   housing: LatestHousing[]
   services: LatestService[]
   secondhand: LatestSecondhand[]
   news: LatestNews[]
 }) {
-  const visibleMainSections = DEFAULT_HOME_LATEST_SECTIONS
+  const visibleMainSections = sections
     .filter((section) => section.section_type === 'main' && section.is_visible)
     .sort((a, b) => a.display_order - b.display_order)
 

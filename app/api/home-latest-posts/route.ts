@@ -58,7 +58,6 @@ async function fetchSections(
   const { data, error } = await supabase
     .from('home_latest_sections')
     .select('section_key, section_name, section_type, parent_key, is_visible, display_order, limit_count')
-    .eq('is_visible', true)
     .order('display_order', { ascending: true })
     .order('section_key', { ascending: true })
 
