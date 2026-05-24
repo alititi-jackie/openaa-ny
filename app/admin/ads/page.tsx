@@ -878,8 +878,8 @@ function AdsAdminContent() {
         {/* Filters */}
         <div className="space-y-2">
           {/* Position filters */}
-          <div className="-mx-1 overflow-x-auto">
-            <div className="flex gap-2 px-1 whitespace-nowrap">
+          <div className="-mx-1 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+            <div className="flex flex-nowrap gap-2 px-1 whitespace-nowrap">
               {POSITION_FILTERS.map((item) => {
                 const active = activePosition === item.key
                 return (
@@ -902,8 +902,8 @@ function AdsAdminContent() {
           </div>
 
           {/* Status filters */}
-          <div className="-mx-1 overflow-x-auto">
-            <div className="flex gap-2 px-1 whitespace-nowrap">
+          <div className="-mx-1 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+            <div className="flex flex-nowrap gap-2 px-1 whitespace-nowrap">
               {STATUS_FILTERS.map((item) => {
                 const active = activeStatus === item.key
                 return (

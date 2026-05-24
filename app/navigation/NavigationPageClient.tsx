@@ -172,11 +172,11 @@ function CategoryTabs({
 
           <div
             ref={scrollRef}
-            className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             role="region"
             aria-label="分类筛选"
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2">
               {categories.map((cat) => (
                 <button
                   key={cat.slug}

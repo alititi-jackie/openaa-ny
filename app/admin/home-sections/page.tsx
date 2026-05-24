@@ -406,7 +406,7 @@ export default function AdminHomeSectionsPage() {
       />
 
       {/* Category navigation bar */}
-      <nav className="mb-5 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+      <nav className="mb-5 -mx-1 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
         {(
           [
             { key: 'main', label: '主板块', sectionId: 'main-section' },

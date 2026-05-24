@@ -799,8 +799,8 @@ export default function AdminNewsPage() {
       {/* News filters */}
       <div className="mb-4 space-y-2">
         {/* Category filters */}
-        <div className="-mx-1 overflow-x-auto">
-          <div className="flex gap-2 px-1 whitespace-nowrap">
+        <div className="-mx-1 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+          <div className="flex flex-nowrap gap-2 px-1 whitespace-nowrap">
             {NEWS_FILTER_CATEGORIES.map((cat) => {
               const active = selectedCategory === cat
               return (
@@ -823,8 +823,8 @@ export default function AdminNewsPage() {
         </div>
 
         {/* Status filters */}
-        <div className="-mx-1 overflow-x-auto">
-          <div className="flex gap-2 px-1 whitespace-nowrap">
+        <div className="-mx-1 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+          <div className="flex flex-nowrap gap-2 px-1 whitespace-nowrap">
             {STATUS_FILTERS.map((item) => {
               const active = selectedStatus === item.key
               return (

@@ -75,7 +75,7 @@ export default function HorizontalCategoryTabs({
 
           <div
             ref={scrollRef}
-            className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             role="region"
             aria-label="分类筛选"
             tabIndex={0}
@@ -84,7 +84,7 @@ export default function HorizontalCategoryTabs({
               if (e.key === 'ArrowRight') scrollRef.current?.scrollBy({ left: SCROLL_DISTANCE, behavior: 'smooth' })
             }}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex flex-nowrap items-center gap-2">
               {rest.map((cat) => {
                 const active = activeCategory === cat
                 if (getHref) {
