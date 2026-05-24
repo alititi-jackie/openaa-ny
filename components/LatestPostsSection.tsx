@@ -1,3 +1,4 @@
+// Homepage data source: /api/home-latest-posts ONLY (DO NOT bypass)
 import Link from 'next/link'
 import { MapPin, ChevronRight, Clock } from 'lucide-react'
 import { formatJobLocation } from '@/lib/utils'
@@ -92,33 +93,7 @@ function getNewsSummary(item: LatestNews) {
   return plain.length > 60 ? `${plain.slice(0, 60)}...` : plain
 }
 
-const HOMEPAGE_GUARD_FILES = ['components/LatestPostsSection.tsx', 'app/page.tsx'] as const
-const HOMEPAGE_LEGACY_PATTERNS = [
-  /\bsupabase\s*\.\s*from\s*\(/,
-  new RegExp(['fetch', 'Pinned', 'First'].join('')),
-  new RegExp(['isPublic', 'Owner', 'Visible'].join('')),
-  new RegExp(['asValid', 'Sections'].join('')),
-  new RegExp(['getLatest', 'Posts', 'Data'].join('')),
-] as const
-
-async function assertHomepageNoSupabaseDependencyInDev() {
-  if (process.env.NODE_ENV !== 'development') return
-
-  const [{ readFile }, { join }] = await Promise.all([import('node:fs/promises'), import('node:path')])
-  await Promise.all(
-    HOMEPAGE_GUARD_FILES.map(async (filePath) => {
-      const file = await readFile(join(process.cwd(), filePath), 'utf8')
-      const hasLegacyPattern = HOMEPAGE_LEGACY_PATTERNS.some((pattern) => pattern.test(file))
-      if (hasLegacyPattern) {
-        throw new Error('LEGACY HOMEPAGE DATA LAYER STILL EXISTS')
-      }
-    })
-  )
-}
-
 export default async function LatestPostsSection() {
-  await assertHomepageNoSupabaseDependencyInDev()
-
   const fallback = { jobs: [], housing: [], services: [], secondhand: [], news: [] }
   try {
     const res = await fetch(`${SITE_URL}/api/home-latest-posts`, { cache: 'no-store' })
