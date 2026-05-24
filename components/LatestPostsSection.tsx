@@ -9,6 +9,7 @@ import {
   type HomeLatestSection,
 } from '@/lib/homeSections'
 import { getPublicSupabaseServerClient, getServiceSupabaseServerClient } from '@/lib/serverSupabase'
+import { SITE_URL } from '@/lib/site'
 
 type LatestJob = {
   id: string | number
@@ -207,25 +208,11 @@ async function getLatestPostsData() {
         )
       : Promise.resolve([]),
     sectionMap.get('latest_housing')?.is_visible
-      ? fetchPinnedFirst(
-          supabase
-            .from('housing_posts')
-            .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .eq('is_pinned', true)
-            .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
-            .order('pinned_order', { ascending: true })
-            .order('created_at', { ascending: false })
-            .limit(30),
-          supabase
-            .from('housing_posts')
-            .select('id, title, location, created_at, is_pinned, pinned_until, user:users(status)')
-            .eq('status', 'published')
-            .order('created_at', { ascending: false })
-            .limit(30),
-          mainLimit('latest_housing', 6)
-        )
-      : Promise.resolve([]),
+      ? fetch(`${SITE_URL}/api/housing?limit=${mainLimit('latest_housing', 6)}`, { cache: 'no-store' })
+          .then((r) => (r.ok ? r.json() : { data: [] }))
+          .then((json: { data?: unknown[] }) => (Array.isArray(json?.data) ? json.data : []) as LatestHousing[])
+          .catch(() => [] as LatestHousing[])
+      : Promise.resolve([] as LatestHousing[]),
     sectionMap.get('latest_secondhand')?.is_visible
       ? fetchPinnedFirst(
           supabase
@@ -247,31 +234,13 @@ async function getLatestPostsData() {
         )
       : Promise.resolve([]),
     sectionMap.get('latest_services')?.is_visible
-      ? fetchPinnedFirst(
-          supabase
-            .from('service_posts')
-            .select(
-              'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
-            )
-            .eq('status', 'active')
-            .eq('is_active', true)
-            .eq('is_pinned', true)
-            .or(`pinned_until.is.null,pinned_until.gt.${nowIso}`)
-            .order('pinned_order', { ascending: true })
-            .order('created_at', { ascending: false })
-            .limit(30),
-          supabase
-            .from('service_posts')
-            .select(
-              'id, title, category, location, description, images, created_at, is_pinned, pinned_until, user:users(status)'
-            )
-            .eq('status', 'active')
-            .eq('is_active', true)
-            .order('created_at', { ascending: false })
-            .limit(30),
-          mainLimit('latest_services', 6)
-        )
-      : Promise.resolve([]),
+      ? fetch(`${SITE_URL}/api/services`, { cache: 'no-store' })
+          .then((r) => (r.ok ? r.json() : { data: [] }))
+          .then((json: { data?: unknown[] }) =>
+            (Array.isArray(json?.data) ? json.data : []).slice(0, mainLimit('latest_services', 6)) as LatestService[]
+          )
+          .catch(() => [] as LatestService[])
+      : Promise.resolve([] as LatestService[]),
   ])
 
   const latestNewsVisible = sectionMap.get('latest_news')?.is_visible === true
