@@ -16,6 +16,7 @@ const MODULE_FILTERS = [
   { key: 'jobs', label: '招聘' },
   { key: 'housing', label: '房屋' },
   { key: 'secondhand', label: '二手' },
+  { key: 'services', label: '本地服务' },
 ] as const
 
 const STATUS_FILTERS = [
@@ -27,7 +28,7 @@ const STATUS_FILTERS = [
 
 const LOCATION_FILTER_OPTIONS = ['全部地区', ...LOCATION_OPTIONS] as const
 
-type ModuleFilter = 'all' | 'jobs' | 'housing' | 'secondhand'
+type ModuleFilter = 'all' | 'jobs' | 'housing' | 'secondhand' | 'services'
 type StatusFilter = 'all' | 'published' | 'hidden' | 'deleted'
 type OpenFilterKey = 'module' | 'location' | 'status' | null
 type PinFormState = {
@@ -64,6 +65,13 @@ function moduleBadge(module: string) {
       </span>
     )
   }
+  if (module === 'services') {
+    return (
+      <span className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 ring-1 ring-teal-100">
+        本地服务
+      </span>
+    )
+  }
   return (
     <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-100">
       二手
@@ -96,6 +104,7 @@ function statusBadge(status: string) {
 function moduleDetailHref(post: UnifiedPost): string {
   if (post.module === 'jobs') return `/jobs/${post.id}?from_admin=1&return_to=/admin/posts`
   if (post.module === 'housing') return `/housing/${post.id}?from_admin=1&return_to=/admin/posts`
+  if (post.module === 'services') return `/services/${post.id}?from_admin=1&return_to=/admin/posts`
   return `/secondhand/${post.id}?from_admin=1&return_to=/admin/posts`
 }
 
@@ -336,7 +345,7 @@ function AdminPostsContent() {
   }
 
   async function handleDelete(post: UnifiedPost) {
-    if (!confirm(`确认删除此${post.module === 'jobs' ? '招聘' : post.module === 'housing' ? '房屋' : '二手'}帖子？`)) {
+    if (!confirm(`确认删除此${post.module === 'jobs' ? '招聘' : post.module === 'housing' ? '房屋' : post.module === 'services' ? '本地服务' : '二手'}帖子？`)) {
       return
     }
     const ok = await updatePost(post, { status: 'deleted' })
@@ -545,7 +554,8 @@ function AdminPostsContent() {
                   value: loc,
                   label: loc,
                 }))}
-                onChange={(next) => setLocationFilter(String(next))}
+                onChange={(next) => setLocationFilter(String(next))
+                }
                 placeholder="全部地区"
                 className="w-[calc(50%-0.25rem)] min-w-0 sm:w-[190px]"
                 isOpen={openFilterKey === 'location'}
@@ -678,48 +688,48 @@ function AdminPostsContent() {
                 <span>🕒 {formatDate(post.created_at)}</span>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    href={moduleDetailHref(post)}
-                    target="_blank"
-                    className="text-xs px-3 py-1.5 rounded-lg border text-gray-700 hover:bg-gray-50 transition"
+                <Link
+                  href={moduleDetailHref(post)}
+                  target="_blank"
+                  className="text-xs px-3 py-1.5 rounded-lg border text-gray-700 hover:bg-gray-50 transition"
+                >
+                  查看
+                </Link>
+                {active ? (
+                  <button
+                    type="button"
+                    onClick={() => startPinSettings(post)}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"
                   >
-                    查看
-                  </Link>
-                  {active ? (
-                    <button
-                      type="button"
-                      onClick={() => startPinSettings(post)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition"
-                    >
-                      置顶设置
-                    </button>
-                  ) : null}
-                  {!active ? (
-                    <button
-                      type="button"
-                      onClick={() => handleRestore(post)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition"
-                    >
-                      恢复
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleHide(post)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition"
-                    >
-                      下架
-                    </button>
-                  )}
-                  {!deleted ? (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(post)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition"
-                    >
-                      删除
-                    </button>
-                  ) : null}
+                    置顶设置
+                  </button>
+                ) : null}
+                {!active ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(post)}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 transition"
+                  >
+                    恢复
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleHide(post)}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition"
+                  >
+                    下架
+                  </button>
+                )}
+                {!deleted ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(post)}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition"
+                  >
+                    删除
+                  </button>
+                ) : null}
               </div>
             </div>
           )
