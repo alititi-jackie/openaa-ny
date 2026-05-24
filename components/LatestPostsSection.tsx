@@ -1,11 +1,7 @@
 import Link from 'next/link'
 import { MapPin, ChevronRight, Clock } from 'lucide-react'
 import { formatJobLocation } from '@/lib/utils'
-import {
-  DEFAULT_HOME_LATEST_SECTIONS,
-  MAIN_SECTION_ROUTE,
-  type HomeLatestSection,
-} from '@/lib/homeSections'
+import { DEFAULT_HOME_LATEST_SECTIONS, MAIN_SECTION_ROUTE } from '@/lib/homeSections'
 import { SITE_URL } from '@/lib/site'
 
 type LatestJob = {
@@ -96,42 +92,67 @@ function getNewsSummary(item: LatestNews) {
   return plain.length > 60 ? `${plain.slice(0, 60)}...` : plain
 }
 
-async function getLatestPostsData() {
+const HOMEPAGE_GUARD_FILES = ['components/LatestPostsSection.tsx', 'app/page.tsx'] as const
+const HOMEPAGE_SUPABASE_PATTERNS = [
+  /getPublicSupabaseServerClient/,
+  /getServiceSupabaseServerClient/,
+  /from\s*\(\s*['"]job_postings['"]\s*\)/,
+  /from\s*\(\s*['"]housing_posts['"]\s*\)/,
+  /from\s*\(\s*['"]service_posts['"]\s*\)/,
+  /from\s*\(\s*['"]secondhand_items['"]\s*\)/,
+  /from\s*\(\s*['"]news_posts['"]\s*\)/,
+] as const
+
+async function assertHomepageNoSupabaseDependencyInDev() {
+  if (process.env.NODE_ENV !== 'development') return
+
+  const [{ readFile }, { join }] = await Promise.all([import('node:fs/promises'), import('node:path')])
+  await Promise.all(
+    HOMEPAGE_GUARD_FILES.map(async (filePath) => {
+      const file = await readFile(join(process.cwd(), filePath), 'utf8')
+      const matchedPattern = HOMEPAGE_SUPABASE_PATTERNS.find((pattern) => pattern.test(file))
+      if (matchedPattern) {
+        throw new Error(
+          `[Homepage Cutover Guard] Direct Supabase dependency detected in ${filePath}: "${matchedPattern.toString()}". Homepage must rely only on /api/home-latest-posts.`
+        )
+      }
+    })
+  )
+}
+
+export default async function LatestPostsSection() {
+  await assertHomepageNoSupabaseDependencyInDev()
+
+  let jobs: LatestJob[] = []
+  let housing: LatestHousing[] = []
+  let services: LatestService[] = []
+  let secondhand: LatestSecondhand[] = []
+  let news: LatestNews[] = []
+
   try {
     const res = await fetch(`${SITE_URL}/api/home-latest-posts`, { cache: 'no-store' })
     if (!res.ok) throw new Error('home-latest-posts fetch failed')
     const json = (await res.json()) as {
-      sections?: HomeLatestSection[]
       jobs?: LatestJob[]
       housing?: LatestHousing[]
       services?: LatestService[]
       secondhand?: LatestSecondhand[]
       news?: LatestNews[]
     }
-    return {
-      sections: Array.isArray(json.sections) ? json.sections : DEFAULT_HOME_LATEST_SECTIONS,
-      jobs: Array.isArray(json.jobs) ? (json.jobs as LatestJob[]) : ([] as LatestJob[]),
-      items: Array.isArray(json.secondhand) ? (json.secondhand as LatestSecondhand[]) : ([] as LatestSecondhand[]),
-      housings: Array.isArray(json.housing) ? (json.housing as LatestHousing[]) : ([] as LatestHousing[]),
-      services: Array.isArray(json.services) ? (json.services as LatestService[]) : ([] as LatestService[]),
-      news: Array.isArray(json.news) ? (json.news as LatestNews[]) : ([] as LatestNews[]),
-    }
+    jobs = Array.isArray(json.jobs) ? json.jobs : []
+    housing = Array.isArray(json.housing) ? json.housing : []
+    services = Array.isArray(json.services) ? json.services : []
+    secondhand = Array.isArray(json.secondhand) ? json.secondhand : []
+    news = Array.isArray(json.news) ? json.news : []
   } catch {
-    return {
-      sections: DEFAULT_HOME_LATEST_SECTIONS,
-      jobs: [] as LatestJob[],
-      items: [] as LatestSecondhand[],
-      housings: [] as LatestHousing[],
-      services: [] as LatestService[],
-      news: [] as LatestNews[],
-    }
+    jobs = []
+    housing = []
+    services = []
+    secondhand = []
+    news = []
   }
-}
 
-export default async function LatestPostsSection() {
-  const { sections, jobs, items, housings, services, news } = await getLatestPostsData()
-
-  const visibleMainSections = sections
+  const visibleMainSections = DEFAULT_HOME_LATEST_SECTIONS
     .filter((section) => section.section_type === 'main' && section.is_visible)
     .sort((a, b) => a.display_order - b.display_order)
 
@@ -225,27 +246,27 @@ export default async function LatestPostsSection() {
                   <ChevronRight size={13} />
                 </Link>
               </div>
-              {housings.length === 0 ? (
+              {housing.length === 0 ? (
                 <p className="text-[12px] text-zinc-400 py-2">暂无最新信息</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
-                  {housings.map((housing) => (
+                  {housing.map((house) => (
                     <Link
-                      key={housing.id}
-                      href={`/housing/${housing.id}`}
+                      key={house.id}
+                      href={`/housing/${house.id}`}
                       className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150"
                     >
-                      <p className="text-[13px] font-semibold text-zinc-800 line-clamp-2 break-words">{housing.title}</p>
+                      <p className="text-[13px] font-semibold text-zinc-800 line-clamp-2 break-words">{house.title}</p>
                       <div className="mt-1 flex items-center gap-1.5 min-h-4">
-                        {isPinnedActive(housing, nowTime) ? (
+                        {isPinnedActive(house, nowTime) ? (
                           <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 border border-amber-100">
                             置顶
                           </span>
                         ) : null}
-                        {housing.location ? (
+                        {house.location ? (
                           <span className="inline-flex items-center gap-1">
                             <MapPin size={10} className="text-zinc-400 flex-shrink-0" />
-                            <span className="text-[11px] text-zinc-400 truncate">{housing.location}</span>
+                            <span className="text-[11px] text-zinc-400 truncate">{house.location}</span>
                           </span>
                         ) : null}
                       </div>
@@ -267,11 +288,11 @@ export default async function LatestPostsSection() {
                   <ChevronRight size={13} />
                 </Link>
               </div>
-              {items.length === 0 ? (
+              {secondhand.length === 0 ? (
                 <p className="text-[12px] text-zinc-400 py-2">暂无最新信息</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
-                  {items.map((item) => (
+                  {secondhand.map((item) => (
                     <Link
                       key={item.id}
                       href={`/secondhand/${item.id}`}
