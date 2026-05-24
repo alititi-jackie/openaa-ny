@@ -343,8 +343,8 @@ async function getLatestPostsData() {
     sections,
     jobs: ((jobsData as LatestJob[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
     items: ((secondhandData as LatestSecondhand[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
-    housings: ((housingsData as LatestHousing[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
-    services: ((servicesData as LatestService[]) ?? []).filter((row) => isPublicOwnerVisible(row.user)),
+    housings: ((housingsData as LatestHousing[]) ?? []).filter((row) => (!row.user ? true : isPublicOwnerVisible(row.user))),
+    services: ((servicesData as LatestService[]) ?? []).filter((row) => (!row.user ? true : isPublicOwnerVisible(row.user))),
     news: [...pinnedNews, ...normalNews].slice(0, latestNewsLimit),
   }
 }
@@ -411,7 +411,7 @@ export default async function LatestPostsSection() {
                       <Link
                         key={job.id}
                         href={`/jobs/${job.id}`}
-                        className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150 overflow-hidden"
+                        className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150"
                       >
                         <p className="text-[13px] font-semibold text-zinc-800 line-clamp-2 break-words">{job.title}</p>
                         <div className="mt-1 flex items-center gap-1.5 min-h-4">
@@ -454,7 +454,7 @@ export default async function LatestPostsSection() {
                     <Link
                       key={housing.id}
                       href={`/housing/${housing.id}`}
-                      className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150 overflow-hidden"
+                      className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150"
                     >
                       <p className="text-[13px] font-semibold text-zinc-800 line-clamp-2 break-words">{housing.title}</p>
                       <div className="mt-1 flex items-center gap-1.5 min-h-4">
@@ -496,7 +496,7 @@ export default async function LatestPostsSection() {
                     <Link
                       key={item.id}
                       href={`/secondhand/${item.id}`}
-                      className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150 overflow-hidden"
+                      className="flex flex-col bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150"
                     >
                       <p className="text-[13px] font-semibold text-zinc-800 line-clamp-2 break-words">{item.title}</p>
                       <div className="mt-1 flex items-center gap-1.5 min-h-4">
@@ -536,7 +536,7 @@ export default async function LatestPostsSection() {
                       <Link
                         key={service.id}
                         href={`/services/${service.id}`}
-                        className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150 overflow-hidden"
+                        className="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5 shadow-[0_1px_6px_rgba(0,0,0,0.06)] border border-zinc-100/70 active:scale-[0.98] transition-transform duration-150"
                       >
                         {/* thumbnail */}
                         <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-zinc-100 flex items-center justify-center">
@@ -544,7 +544,9 @@ export default async function LatestPostsSection() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={thumb} alt={service.title ?? ''} className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-2xl select-none" aria-hidden="true">🛠️</span>
+                            <span className="text-2xl select-none" aria-hidden="true">
+                              🛠️
+                            </span>
                           )}
                         </div>
                         {/* text */}
@@ -555,9 +557,11 @@ export default async function LatestPostsSection() {
                                 置顶
                               </span>
                             ) : null}
-                            <p className="text-[13px] font-semibold text-zinc-800 truncate" title={service.title ?? undefined}>{service.title}</p>
+                            <p className="text-[13px] font-semibold text-zinc-800 truncate" title={service.title ?? undefined}>
+                              {service.title}
+                            </p>
                           </div>
-                          {(service.category || service.location) ? (
+                          {service.category || service.location ? (
                             <p className="text-[11px] text-zinc-400 mt-0.5 truncate">
                               {[service.category, service.location].filter(Boolean).join(' · ')}
                             </p>
