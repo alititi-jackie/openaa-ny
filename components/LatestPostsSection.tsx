@@ -4,7 +4,7 @@ import { MapPin, ChevronRight, Clock } from 'lucide-react'
 import { formatJobLocation } from '@/lib/utils'
 import {
   DEFAULT_HOME_LATEST_SECTIONS,
-  MAIN_SECTION_ROUTE,
+  HOME_QUICK_LINKS,
   normalizeHomeLatestSection,
   type HomeLatestSection,
 } from '@/lib/homeSections'
@@ -157,12 +157,7 @@ function renderLatestPostsSection({
     .filter((section) => section.section_type === 'main' && section.is_visible)
     .sort((a, b) => a.display_order - b.display_order)
 
-  const quickLinks = visibleMainSections
-    .map((section) => ({
-      label: section.section_name.replace(/^最新/, ''),
-      href: MAIN_SECTION_ROUTE[section.section_key] || '#',
-    }))
-    .filter((item) => item.href !== '#')
+  const quickLinks = HOME_QUICK_LINKS
 
   const nowTime = Date.now()
 
