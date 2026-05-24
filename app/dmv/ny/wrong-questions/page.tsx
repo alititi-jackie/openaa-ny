@@ -345,7 +345,7 @@ export default function WrongQuestionsPage() {
             </div>
 
             {/* Filters */}
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
               <button
                 type="button"
                 onClick={() => setOnlySign(false)}

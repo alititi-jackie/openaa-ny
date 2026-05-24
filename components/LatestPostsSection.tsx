@@ -171,7 +171,7 @@ function renderLatestPostsSection({
         </div>
 
         {/* Quick nav links (not tabs) */}
-        <div className="mt-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="mt-2 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden no-scrollbar [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
           {quickLinks.map((l) => (
             <Link
               key={l.href}

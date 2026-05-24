@@ -242,7 +242,7 @@ export default function Header() {
 
                 <div
                   ref={scrollRef}
-                  className="flex gap-2 overflow-x-auto whitespace-nowrap pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {quickNavItems.map((item) => (
                     <Link

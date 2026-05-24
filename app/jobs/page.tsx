@@ -154,8 +154,8 @@ export default function JobsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6">
-          <div className="inline-flex rounded-xl bg-gray-100 p-1">
+        <div className="mb-6 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+          <div className="inline-flex flex-nowrap rounded-xl bg-gray-100 p-1">
             {TABS.map((t) => {
               const isActive = t.key === activeTab
               return (
