@@ -101,7 +101,9 @@ function getNewsSummary(item: LatestNews) {
 function getValidSections(input: unknown): HomeLatestSection[] {
   if (!Array.isArray(input)) return []
   return input
-    .map((section) => normalizeHomeLatestSection(section as Partial<HomeLatestSection>))
+    .map((section) =>
+      section && typeof section === 'object' ? normalizeHomeLatestSection(section as Partial<HomeLatestSection>) : null
+    )
     .filter((section): section is HomeLatestSection => section !== null)
 }
 
