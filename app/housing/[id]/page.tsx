@@ -64,6 +64,7 @@ export default function HousingDetailPage() {
         .from('housing_posts')
         .select('*')
         .eq('id', id)
+        .in('status', ['published', 'active'])
         .single()
 
       if (!postData) {

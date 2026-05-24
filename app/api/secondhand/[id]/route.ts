@@ -2,8 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { validateContactFields } from '@/lib/contactValidation'
 import { isPublicOwnerVisible } from '@/lib/publicVisibility'
+import {
+  assertUserCanDeleteOwnContent,
+  assertUserCanEditOwnContent,
+  assertUserCanHideContent,
+} from '@/lib/accountStatus'
 
 export const dynamic = 'force-dynamic'
+
+function hasPublicStateMutation(body: unknown): boolean {
+  return Boolean(body && typeof body === 'object' && ('status' in body || 'is_active' in body))
+}
 
 export async function GET(
   _request: NextRequest,
@@ -19,6 +28,7 @@ export async function GET(
     .from('secondhand_items')
     .select('*, user:users(username, avatar_url, status)')
     .eq('id', id)
+    .eq('status', 'published')
     .single()
 
   if (error || !data || !isPublicOwnerVisible((data as { user?: unknown }).user)) {
@@ -46,6 +56,18 @@ export async function PUT(
   if (!user) return NextResponse.json({ error: '未授权' }, { status: 401 })
 
   const body = await request.json()
+  const editPermission = await assertUserCanEditOwnContent(supabase, user.id)
+  if (!editPermission.allowed) {
+    return NextResponse.json({ error: editPermission.message }, { status: 403 })
+  }
+
+  if (hasPublicStateMutation(body)) {
+    const statePermission = await assertUserCanHideContent(supabase, user.id)
+    if (!statePermission.allowed) {
+      return NextResponse.json({ error: statePermission.message }, { status: 403 })
+    }
+  }
+
   if ('phone' in body || 'wechat' in body) {
     const contactCheck = validateContactFields(body?.phone ?? '', body?.wechat ?? '')
     if (!contactCheck.ok) {
@@ -81,6 +103,11 @@ export async function DELETE(
 
   const { data: { user } } = await supabase.auth.getUser(token)
   if (!user) return NextResponse.json({ error: '未授权' }, { status: 401 })
+
+  const permission = await assertUserCanDeleteOwnContent(supabase, user.id)
+  if (!permission.allowed) {
+    return NextResponse.json({ error: permission.message }, { status: 403 })
+  }
 
   const { error } = await supabase
     .from('secondhand_items')

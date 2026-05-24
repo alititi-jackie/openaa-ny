@@ -5,6 +5,7 @@ import {
   isValidNavigationUrl,
   normalizeNavigationUrl,
 } from '@/lib/user-navigation'
+import { assertUserCanCreateContent } from '@/lib/accountStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,6 +36,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await authenticateUserRequest(request)
   if ('errorResponse' in auth) return auth.errorResponse
+
+  const permission = await assertUserCanCreateContent(auth.supabase, auth.user.id)
+  if (!permission.allowed) {
+    return NextResponse.json({ error: permission.message }, { status: 403 })
+  }
 
   const body: unknown = await request.json()
   if (body === null || typeof body !== 'object') {

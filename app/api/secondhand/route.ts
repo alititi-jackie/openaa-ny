@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { validateContactFields } from '@/lib/contactValidation'
 import { isPublicOwnerVisible } from '@/lib/publicVisibility'
+import { assertUserCanCreateContent } from '@/lib/accountStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +47,11 @@ export async function POST(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser(token)
   if (!user) return NextResponse.json({ error: '未授权' }, { status: 401 })
+
+  const permission = await assertUserCanCreateContent(supabase, user.id)
+  if (!permission.allowed) {
+    return NextResponse.json({ error: permission.message }, { status: 403 })
+  }
 
   const body = await request.json()
   const contactCheck = validateContactFields(body?.phone ?? '', body?.wechat ?? '')

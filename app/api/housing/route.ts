@@ -150,10 +150,6 @@ export async function GET(request: NextRequest) {
 
   const visibleByUser = rows.filter((row) => {
     const status = userStatusMap.get(row.user_id)
-    // If user not found / null -> do NOT hide
-    if (status === undefined || status === null) return true
-    // Only hide when explicitly restricted/banned/hidden/deleted
-    if (status === 'restricted' || status === 'banned' || status === 'hidden' || status === 'deleted') return false
     return isPublicUserStatusVisible(status)
   })
 

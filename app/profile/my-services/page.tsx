@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import {
+  assertUserCanDeleteOwnContent,
+  assertUserCanHideContent,
+  assertUserCanRestoreContent,
+} from '@/lib/accountStatus'
 import BackToTopButton from '@/components/BackToTopButton'
 import DetailBackButton from '@/components/DetailBackButton'
 import type { ServicePost } from '@/types'
@@ -68,6 +73,12 @@ export default function MyServicesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
 
+    const permission = await assertUserCanHideContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
+
     const { data: updated, error } = await supabase
       .from('service_posts')
       .update({ status: 'hidden', is_active: false, updated_at: new Date().toISOString() })
@@ -87,6 +98,12 @@ export default function MyServicesPage() {
   const handleRestore = async (id: string) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
+
+    const permission = await assertUserCanRestoreContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
 
     const { data: updated, error } = await supabase
       .from('service_posts')
@@ -108,6 +125,12 @@ export default function MyServicesPage() {
     if (!confirm('确认删除此服务信息？删除后无法恢复。')) return
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
+
+    const permission = await assertUserCanDeleteOwnContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
 
     const { data: updated, error } = await supabase
       .from('service_posts')

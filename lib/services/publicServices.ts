@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { isPublicUserStatusVisible } from '@/lib/publicVisibility'
 
 type PublicServiceFilter = {
   location?: string
@@ -159,11 +160,9 @@ export async function listPublicServices(
     }
   }
 
-  const invisibleStatuses = new Set(['banned', 'restricted', 'hidden', 'deleted'])
   const visibleByUser = rows.filter((row) => {
     const userStatus = userStatusMap.get(row.user_id)
-    if (userStatus === undefined || userStatus === null) return true
-    return !invisibleStatuses.has(userStatus.toLowerCase())
+    return isPublicUserStatusVisible(userStatus)
   })
 
   const nowTime = Date.now()

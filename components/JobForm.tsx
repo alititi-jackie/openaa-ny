@@ -8,7 +8,11 @@ import { JOB_CATEGORIES, JOB_TYPES, DEFAULT_JOB_CATEGORY } from '@/lib/constants
 import { checkDailyPostLimit } from '@/lib/checkDailyPostLimit'
 import { DEFAULT_LOCATION, LOCATION_OPTIONS } from '@/lib/locationOptions'
 import { validateContactFields, CONTACT_MISSING_MESSAGE } from '@/lib/contactValidation'
-import { assertUserCanPostOrEdit, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
+import {
+  assertUserCanCreateContent,
+  assertUserCanEditOwnContent,
+  BANNED_ACCOUNT_MESSAGE,
+} from '@/lib/accountStatus'
 import type { JobPosting, JobPostingType, JobSalaryUnit } from '@/types'
 
 type PublishMode = JobPostingType
@@ -187,13 +191,13 @@ export default function JobForm({ initialType = 'hiring', editJob = null }: Prop
       return
     }
 
-    if (!isEditing) {
-      const permission = await assertUserCanPostOrEdit(supabase, user.id)
-      if (!permission.allowed) {
-        setError(BANNED_ACCOUNT_MESSAGE)
-        setLoading(false)
-        return
-      }
+    const permission = isEditing
+      ? await assertUserCanEditOwnContent(supabase, user.id)
+      : await assertUserCanCreateContent(supabase, user.id)
+    if (!permission.allowed) {
+      setError(permission.message || BANNED_ACCOUNT_MESSAGE)
+      setLoading(false)
+      return
     }
 
     const salaryValue = safeNumberOrNull(hiring.salary)
@@ -258,9 +262,14 @@ export default function JobForm({ initialType = 'hiring', editJob = null }: Prop
     }
 
     if (isEditing && editJob) {
+      const editPayload: Record<string, unknown> = { ...payload }
+      delete editPayload.status
+      delete editPayload.views
+      delete editPayload.user_id
+
       const { data: updated, error: updateError } = await supabase
         .from('job_postings')
-        .update({ ...payload, updated_at: new Date().toISOString() })
+        .update({ ...editPayload, updated_at: new Date().toISOString() })
         .eq('id', editJob.id)
         .eq('user_id', user.id)
         .select()

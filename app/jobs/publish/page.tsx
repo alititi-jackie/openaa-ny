@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { assertUserCanPostOrEdit, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
+import { assertUserCanCreateContent, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
 import JobForm from '@/components/JobForm'
 import type { JobPosting, JobPostingType } from '@/types'
 
@@ -62,11 +62,11 @@ function PublishJobPageInner() {
         }
 
         if (!editId) {
-          const permission = await assertUserCanPostOrEdit(supabase, user.id)
+          const permission = await assertUserCanCreateContent(supabase, user.id)
           if (!permission.allowed) {
             if (!cancelled) {
               setAuthStatus('ok')
-              setError(BANNED_ACCOUNT_MESSAGE)
+              setError(permission.message || BANNED_ACCOUNT_MESSAGE)
               setChecking(false)
             }
             return

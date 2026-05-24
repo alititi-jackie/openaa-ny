@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { assertUserCanPostOrEdit, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
+import { assertUserCanCreateContent, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
 import ItemForm from '@/components/ItemForm'
 import type { SecondhandItem, SecondhandItemType } from '@/types'
 
@@ -64,11 +64,11 @@ function PublishItemPageInner() {
         }
 
         if (!editId) {
-          const permission = await assertUserCanPostOrEdit(supabase, user.id)
+          const permission = await assertUserCanCreateContent(supabase, user.id)
           if (!permission.allowed) {
             if (!cancelled) {
               setAuthStatus('ok')
-              setError(BANNED_ACCOUNT_MESSAGE)
+              setError(permission.message || BANNED_ACCOUNT_MESSAGE)
               setChecking(false)
             }
             return

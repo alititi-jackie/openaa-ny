@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { use } from 'react'
 import { supabase } from '@/lib/supabase'
+import { assertUserCanEditOwnContent } from '@/lib/accountStatus'
 import { DEFAULT_LOCATION, LOCATION_OPTIONS } from '@/lib/locationOptions'
 import { compressImageFile, getCompressImageErrorMessage } from '@/lib/compressImage'
 import { validateContactFields } from '@/lib/contactValidation'
@@ -185,6 +186,13 @@ export default function ServiceEditPage({
     const user = authData?.user
     if (!user || !post) {
       router.push('/auth/login')
+      return
+    }
+
+    const permission = await assertUserCanEditOwnContent(supabase, user.id)
+    if (!permission.allowed) {
+      setError(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      setSaving(false)
       return
     }
 

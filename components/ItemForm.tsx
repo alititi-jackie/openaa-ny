@@ -9,7 +9,11 @@ import { checkDailyPostLimit } from '@/lib/checkDailyPostLimit'
 import { DEFAULT_LOCATION, LOCATION_OPTIONS } from '@/lib/locationOptions'
 import { compressImageFile, getCompressImageErrorMessage } from '@/lib/compressImage'
 import { validateContactFields, CONTACT_MISSING_MESSAGE } from '@/lib/contactValidation'
-import { assertUserCanPostOrEdit, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
+import {
+  assertUserCanCreateContent,
+  assertUserCanEditOwnContent,
+  BANNED_ACCOUNT_MESSAGE,
+} from '@/lib/accountStatus'
 import type { SecondhandItemType, SecondhandItem } from '@/types'
 
 const SECONDHAND_LOCATIONS = LOCATION_OPTIONS
@@ -244,13 +248,13 @@ export default function ItemForm({ initialType, editItem }: Props) {
       return
     }
 
-    if (!isEdit) {
-      const permission = await assertUserCanPostOrEdit(supabase, user.id)
-      if (!permission.allowed) {
-        setError(BANNED_ACCOUNT_MESSAGE)
-        setLoading(false)
-        return
-      }
+    const permission = isEdit
+      ? await assertUserCanEditOwnContent(supabase, user.id)
+      : await assertUserCanCreateContent(supabase, user.id)
+    if (!permission.allowed) {
+      setError(permission.message || BANNED_ACCOUNT_MESSAGE)
+      setLoading(false)
+      return
     }
 
     const sellingTitle = selling.title.trim()
@@ -294,10 +298,13 @@ export default function ItemForm({ initialType, editItem }: Props) {
 
     try {
       if (isEdit && editItem) {
+        const editPayload: Record<string, unknown> = { ...basePayload }
+        delete editPayload.status
+
         // 1) Update base fields first
         const { data: updatedBase, error: updateError } = await supabase
           .from('secondhand_items')
-          .update({ ...basePayload, updated_at: new Date().toISOString() })
+          .update({ ...editPayload, updated_at: new Date().toISOString() })
           .eq('id', editItem.id)
           .eq('user_id', user.id)
           .select()

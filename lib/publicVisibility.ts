@@ -18,3 +18,5 @@ export function isPublicOwnerVisible(joinedUser: unknown): boolean {
   const user = normalizeJoinedUser(joinedUser)
   return isPublicUserStatusVisible(user?.status)
 }
+
+export const isOwnerPublicVisible = isPublicOwnerVisible

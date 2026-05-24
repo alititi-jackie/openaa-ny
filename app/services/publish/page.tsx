@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { assertUserCanPostOrEdit, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
+import { assertUserCanCreateContent, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
 import { checkDailyPostLimit } from '@/lib/checkDailyPostLimit'
 import { DEFAULT_LOCATION, LOCATION_OPTIONS } from '@/lib/locationOptions'
 import { compressImageFile, getCompressImageErrorMessage } from '@/lib/compressImage'
@@ -118,11 +118,11 @@ function ServicesPublishClient() {
           if (!cancelled) { setAuthStatus('email-not-verified'); setChecking(false) }
           return
         }
-        const permission = await assertUserCanPostOrEdit(supabase, user.id)
+        const permission = await assertUserCanCreateContent(supabase, user.id)
         if (!permission.allowed) {
           if (!cancelled) {
             setAuthStatus('ok')
-            setError(BANNED_ACCOUNT_MESSAGE)
+            setError(permission.message || BANNED_ACCOUNT_MESSAGE)
             setChecking(false)
           }
           return
@@ -159,9 +159,9 @@ function ServicesPublishClient() {
       return
     }
 
-    const permission = await assertUserCanPostOrEdit(supabase, user.id)
+    const permission = await assertUserCanCreateContent(supabase, user.id)
     if (!permission.allowed) {
-      setError(BANNED_ACCOUNT_MESSAGE)
+      setError(permission.message || BANNED_ACCOUNT_MESSAGE)
       setLoading(false)
       return
     }

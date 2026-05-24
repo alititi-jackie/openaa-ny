@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateUserRequest } from '@/lib/request-auth'
+import { assertUserCanEditOwnContent } from '@/lib/accountStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +12,11 @@ type LinkRow = {
 export async function POST(request: NextRequest) {
   const auth = await authenticateUserRequest(request)
   if ('errorResponse' in auth) return auth.errorResponse
+
+  const permission = await assertUserCanEditOwnContent(auth.supabase, auth.user.id)
+  if (!permission.allowed) {
+    return NextResponse.json({ error: permission.message }, { status: 403 })
+  }
 
   const body: unknown = await request.json()
   if (body === null || typeof body !== 'object') {

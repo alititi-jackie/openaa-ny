@@ -25,8 +25,9 @@ export default function JobDetailPage() {
       setShowContactInfo(false)
       const { data } = await supabase
         .from('job_postings')
-        .select('*, user:users(username, avatar_url)')
+        .select('*, user:users(username, avatar_url, status)')
         .eq('id', id)
+        .eq('status', 'published')
         .single()
 
       if (data && isPublicOwnerVisible((data as JobPosting).user)) {

@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { assertUserCanPostOrEdit, BANNED_ACCOUNT_MESSAGE } from '@/lib/accountStatus'
+import {
+  assertUserCanCreateContent,
+  assertUserCanEditOwnContent,
+  BANNED_ACCOUNT_MESSAGE,
+} from '@/lib/accountStatus'
 import { checkDailyPostLimit } from '@/lib/checkDailyPostLimit'
 import { DEFAULT_LOCATION, LOCATION_OPTIONS } from '@/lib/locationOptions'
 import { compressImageFile, getCompressImageErrorMessage } from '@/lib/compressImage'
@@ -159,11 +163,11 @@ function HousingPublishClient() {
         }
 
         if (!editId) {
-          const permission = await assertUserCanPostOrEdit(supabase, user.id)
+          const permission = await assertUserCanCreateContent(supabase, user.id)
           if (!permission.allowed) {
             if (!cancelled) {
               setAuthStatus('ok')
-              setError(BANNED_ACCOUNT_MESSAGE)
+              setError(permission.message || BANNED_ACCOUNT_MESSAGE)
               setChecking(false)
             }
             return
@@ -267,13 +271,13 @@ function HousingPublishClient() {
       return
     }
 
-    if (!isEditing) {
-      const permission = await assertUserCanPostOrEdit(supabase, user.id)
-      if (!permission.allowed) {
-        setError(BANNED_ACCOUNT_MESSAGE)
-        setLoading(false)
-        return
-      }
+    const permission = isEditing
+      ? await assertUserCanEditOwnContent(supabase, user.id)
+      : await assertUserCanCreateContent(supabase, user.id)
+    if (!permission.allowed) {
+      setError(permission.message || BANNED_ACCOUNT_MESSAGE)
+      setLoading(false)
+      return
     }
 
     const remoteUrls = previewImages.filter((img) => img.kind === 'remote').map((img) => img.url)

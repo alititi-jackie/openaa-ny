@@ -5,6 +5,7 @@ import {
   isValidNavigationUrl,
   normalizeNavigationUrl,
 } from '@/lib/user-navigation'
+import { assertUserCanDeleteOwnContent, assertUserCanEditOwnContent } from '@/lib/accountStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +26,11 @@ export async function PATCH(
 ) {
   const auth = await authenticateUserRequest(request)
   if ('errorResponse' in auth) return auth.errorResponse
+
+  const permission = await assertUserCanEditOwnContent(auth.supabase, auth.user.id)
+  if (!permission.allowed) {
+    return NextResponse.json({ error: permission.message }, { status: 403 })
+  }
 
   const body: unknown = await request.json()
   if (body === null || typeof body !== 'object') {
@@ -86,6 +92,11 @@ export async function DELETE(
 ) {
   const auth = await authenticateUserRequest(request)
   if ('errorResponse' in auth) return auth.errorResponse
+
+  const permission = await assertUserCanDeleteOwnContent(auth.supabase, auth.user.id)
+  if (!permission.allowed) {
+    return NextResponse.json({ error: permission.message }, { status: 403 })
+  }
 
   const { id } = await params
   const { error } = await auth.supabase

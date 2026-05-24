@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { assertUserCanDeleteOwnContent } from '@/lib/accountStatus'
 import BackToTopButton from '@/components/BackToTopButton'
 import DetailBackButton from '@/components/DetailBackButton'
 import type { SecondhandItem } from '@/types'
@@ -80,6 +81,12 @@ export default function MyItemsPage() {
     } = await supabase.auth.getUser()
     if (!user) {
       router.push('/auth/login')
+      return
+    }
+
+    const permission = await assertUserCanDeleteOwnContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
       return
     }
 

@@ -12,7 +12,7 @@ export const BANNED_ACCOUNT_MESSAGE = '此账号因收到用户投诉或内容�
 export const RESTRICTED_ACCOUNT_MESSAGE = BANNED_ACCOUNT_MESSAGE
 export const ACCOUNT_STATUS_CHECK_FAILED_MESSAGE = '账号状态暂时无法验证，请稍后重试。'
 
-function normalizeAccountStatus(value: unknown): AccountStatus | null {
+export function normalizeAccountStatus(value: unknown): AccountStatus | null {
   if (value === 'active' || value === 'restricted' || value === 'banned') return value
   return null
 }
@@ -25,6 +25,14 @@ export function getAccountStatusMessage(status: AccountStatus | 'unknown'): stri
 
 export function isUserBlocked(status: AccountStatus | 'unknown'): boolean {
   return status !== 'active'
+}
+
+export function isActiveAccountStatus(status: AccountStatus | 'unknown'): boolean {
+  return status === 'active'
+}
+
+export function isRestrictedOrBannedStatus(status: AccountStatus | 'unknown'): boolean {
+  return status === 'restricted' || status === 'banned'
 }
 
 export async function getUserAccountStatus(
@@ -55,15 +63,7 @@ export async function getUserAccountStatus(
       }
     }
 
-    if (status === 'active') {
-      return { allowed: true, status }
-    }
-
-    return {
-      allowed: false,
-      status,
-      message: getAccountStatusMessage(status),
-    }
+    return { allowed: true, status }
   } catch {
     return {
       allowed: false,
@@ -73,9 +73,59 @@ export async function getUserAccountStatus(
   }
 }
 
+function allowKnownAccountStatus(result: AccountPermissionResult): AccountPermissionResult {
+  if (!result.allowed) return result
+  return { allowed: true, status: result.status }
+}
+
+function allowOnlyActiveAccountStatus(result: AccountPermissionResult): AccountPermissionResult {
+  if (!result.allowed) return result
+  if (result.status === 'active') return { allowed: true, status: result.status }
+  return {
+    allowed: false,
+    status: result.status,
+    message: getAccountStatusMessage(result.status),
+  }
+}
+
+export async function assertUserCanCreateContent(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<AccountPermissionResult> {
+  return allowOnlyActiveAccountStatus(await getUserAccountStatus(supabase, userId))
+}
+
+export async function assertUserCanEditOwnContent(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<AccountPermissionResult> {
+  return allowKnownAccountStatus(await getUserAccountStatus(supabase, userId))
+}
+
+export async function assertUserCanDeleteOwnContent(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<AccountPermissionResult> {
+  return allowKnownAccountStatus(await getUserAccountStatus(supabase, userId))
+}
+
+export async function assertUserCanHideContent(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<AccountPermissionResult> {
+  return allowOnlyActiveAccountStatus(await getUserAccountStatus(supabase, userId))
+}
+
+export async function assertUserCanRestoreContent(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<AccountPermissionResult> {
+  return allowOnlyActiveAccountStatus(await getUserAccountStatus(supabase, userId))
+}
+
 export async function assertUserCanPostOrEdit(
   supabase: SupabaseClient,
   userId: string
 ): Promise<AccountPermissionResult> {
-  return getUserAccountStatus(supabase, userId)
+  return assertUserCanCreateContent(supabase, userId)
 }

@@ -49,8 +49,9 @@ export default function SecondhandDetailPage() {
       setShowContactInfo(false)
       const { data } = await supabase
         .from('secondhand_items')
-        .select('*, user:users(username, avatar_url)')
+        .select('*, user:users(username, avatar_url, status)')
         .eq('id', id)
+        .eq('status', 'published')
         .single()
 
       if (data && isPublicOwnerVisible((data as SecondhandItem).user)) {

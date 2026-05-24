@@ -1,6 +1,5 @@
 import type { HomeLatestSupabaseClient } from './client'
-
-const INVISIBLE_USER_STATUSES = new Set(['banned', 'restricted', 'hidden', 'deleted'])
+import { isPublicUserStatusVisible } from '@/lib/publicVisibility'
 
 export async function getUserStatusMap(
   supabase: HomeLatestSupabaseClient,
@@ -19,6 +18,5 @@ export async function getUserStatusMap(
 
 export function isUserVisible(userStatusMap: Map<string, string | null>, userId: string): boolean {
   const status = userStatusMap.get(userId)
-  if (status === undefined || status === null) return true
-  return !INVISIBLE_USER_STATUSES.has(status.toLowerCase())
+  return isPublicUserStatusVisible(status)
 }
