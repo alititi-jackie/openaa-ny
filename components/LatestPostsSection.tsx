@@ -93,14 +93,12 @@ function getNewsSummary(item: LatestNews) {
 }
 
 const HOMEPAGE_GUARD_FILES = ['components/LatestPostsSection.tsx', 'app/page.tsx'] as const
-const HOMEPAGE_SUPABASE_PATTERNS = [
-  /getPublicSupabaseServerClient/,
-  /getServiceSupabaseServerClient/,
-  /from\s*\(\s*['"]job_postings['"]\s*\)/,
-  /from\s*\(\s*['"]housing_posts['"]\s*\)/,
-  /from\s*\(\s*['"]service_posts['"]\s*\)/,
-  /from\s*\(\s*['"]secondhand_items['"]\s*\)/,
-  /from\s*\(\s*['"]news_posts['"]\s*\)/,
+const HOMEPAGE_LEGACY_PATTERNS = [
+  /\bsupabase\s*\.\s*from\s*\(/,
+  new RegExp(['fetch', 'Pinned', 'First'].join('')),
+  new RegExp(['isPublic', 'Owner', 'Visible'].join('')),
+  new RegExp(['asValid', 'Sections'].join('')),
+  new RegExp(['getLatest', 'Posts', 'Data'].join('')),
 ] as const
 
 async function assertHomepageNoSupabaseDependencyInDev() {
@@ -110,11 +108,9 @@ async function assertHomepageNoSupabaseDependencyInDev() {
   await Promise.all(
     HOMEPAGE_GUARD_FILES.map(async (filePath) => {
       const file = await readFile(join(process.cwd(), filePath), 'utf8')
-      const matchedPattern = HOMEPAGE_SUPABASE_PATTERNS.find((pattern) => pattern.test(file))
-      if (matchedPattern) {
-        throw new Error(
-          `[Homepage Cutover Guard] Direct Supabase dependency detected in ${filePath}: "${matchedPattern.toString()}". Homepage must rely only on /api/home-latest-posts.`
-        )
+      const hasLegacyPattern = HOMEPAGE_LEGACY_PATTERNS.some((pattern) => pattern.test(file))
+      if (hasLegacyPattern) {
+        throw new Error('LEGACY HOMEPAGE DATA LAYER STILL EXISTS')
       }
     })
   )
@@ -123,35 +119,48 @@ async function assertHomepageNoSupabaseDependencyInDev() {
 export default async function LatestPostsSection() {
   await assertHomepageNoSupabaseDependencyInDev()
 
-  let jobs: LatestJob[] = []
-  let housing: LatestHousing[] = []
-  let services: LatestService[] = []
-  let secondhand: LatestSecondhand[] = []
-  let news: LatestNews[] = []
-
+  const fallback = { jobs: [], housing: [], services: [], secondhand: [], news: [] }
   try {
     const res = await fetch(`${SITE_URL}/api/home-latest-posts`, { cache: 'no-store' })
     if (!res.ok) throw new Error('home-latest-posts fetch failed')
-    const json = (await res.json()) as {
+    const { jobs, housing, services, secondhand, news } = (await res.json()) as {
       jobs?: LatestJob[]
       housing?: LatestHousing[]
       services?: LatestService[]
       secondhand?: LatestSecondhand[]
       news?: LatestNews[]
     }
-    jobs = Array.isArray(json.jobs) ? json.jobs : []
-    housing = Array.isArray(json.housing) ? json.housing : []
-    services = Array.isArray(json.services) ? json.services : []
-    secondhand = Array.isArray(json.secondhand) ? json.secondhand : []
-    news = Array.isArray(json.news) ? json.news : []
-  } catch {
-    jobs = []
-    housing = []
-    services = []
-    secondhand = []
-    news = []
-  }
+    const safeJobs = Array.isArray(jobs) ? jobs : fallback.jobs
+    const safeHousing = Array.isArray(housing) ? housing : fallback.housing
+    const safeServices = Array.isArray(services) ? services : fallback.services
+    const safeSecondhand = Array.isArray(secondhand) ? secondhand : fallback.secondhand
+    const safeNews = Array.isArray(news) ? news : fallback.news
 
+    return renderLatestPostsSection({
+      jobs: safeJobs,
+      housing: safeHousing,
+      services: safeServices,
+      secondhand: safeSecondhand,
+      news: safeNews,
+    })
+  } catch {
+    return renderLatestPostsSection(fallback)
+  }
+}
+
+function renderLatestPostsSection({
+  jobs,
+  housing,
+  services,
+  secondhand,
+  news,
+}: {
+  jobs: LatestJob[]
+  housing: LatestHousing[]
+  services: LatestService[]
+  secondhand: LatestSecondhand[]
+  news: LatestNews[]
+}) {
   const visibleMainSections = DEFAULT_HOME_LATEST_SECTIONS
     .filter((section) => section.section_type === 'main' && section.is_visible)
     .sort((a, b) => a.display_order - b.display_order)
