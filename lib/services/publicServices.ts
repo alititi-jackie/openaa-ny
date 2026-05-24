@@ -6,6 +6,8 @@ type PublicServiceFilter = {
   category?: string
   search?: string
   id?: string
+  page?: number
+  limit?: number
 }
 
 export type PublicServiceRow = {
@@ -86,6 +88,8 @@ async function queryPublicServiceRows(
   const category = (filter.category || '').trim()
   const search = (filter.search || '').trim()
   const id = (filter.id || '').trim()
+  const page = filter.page && filter.page > 0 ? filter.page : 1
+  const limit = filter.limit && filter.limit > 0 ? filter.limit : undefined
 
   const buildQuery = (withIsActive: boolean) => {
     const selectFields = withIsActive
@@ -97,6 +101,11 @@ async function queryPublicServiceRows(
       .select(selectFields)
       .in('status', ['active', 'published'])
       .order('created_at', { ascending: false })
+
+    if (limit) {
+      const from = (page - 1) * limit
+      query = query.range(from, from + limit - 1)
+    }
 
     if (id) {
       query = query.eq('id', id)

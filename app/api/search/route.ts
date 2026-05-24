@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { clampPageSize, normalizeSearchParam } from '@/lib/api/params'
 import { isPublicOwnerVisible } from '@/lib/publicVisibility'
 
 export const dynamic = 'force-dynamic'
@@ -38,8 +39,9 @@ async function runModuleQuery<T>(
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const rawQ = searchParams.get('q') ?? ''
-  const q = rawQ.trim()
+  const q = normalizeSearchParam(searchParams.get('q'))
+  const resultLimit = clampPageSize(searchParams.get('pageSize') ?? searchParams.get('limit'), 25, 50)
+  const moduleLimit = Math.max(5, Math.ceil(resultLimit / 5))
 
   if (q.length < 1) {
     return NextResponse.json({ data: [] })
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
         .eq('is_published', true)
         .or(`${like('title')},${like('summary')},${like('category')}`)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(moduleLimit)
     ),
 
     // Jobs: only status = 'published'
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
         .eq('status', 'published')
         .or(`${like('title')},${like('company')},${like('description')},${like('location')}`)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(moduleLimit)
     ),
 
     // Housing: only status = 'published'
@@ -88,7 +90,7 @@ export async function GET(request: NextRequest) {
         .eq('status', 'published')
         .or(`${like('title')},${like('description')},${like('location')}`)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(moduleLimit)
     ),
 
     // Secondhand: only status = 'published' (table is secondhand_items)
@@ -100,7 +102,7 @@ export async function GET(request: NextRequest) {
         .eq('status', 'published')
         .or(`${like('title')},${like('description')},${like('category')}`)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(moduleLimit)
     ),
 
     // Services: status IN ('active', 'published'), exclude only explicit is_active = false
@@ -112,7 +114,7 @@ export async function GET(request: NextRequest) {
         .in('status', ['active', 'published'])
         .or(`${like('title')},${like('description')},${like('category')},${like('location')}`)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(moduleLimit)
     ),
   ])
 
@@ -191,5 +193,5 @@ export async function GET(request: NextRequest) {
     return tb - ta
   })
 
-  return NextResponse.json({ data: results.slice(0, 25) })
+  return NextResponse.json({ data: results.slice(0, resultLimit) })
 }

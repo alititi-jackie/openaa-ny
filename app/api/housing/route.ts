@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { clampPageSize, normalizeSearchParam, parsePageParam } from '@/lib/api/params'
 import { isPublicUserStatusVisible } from '@/lib/publicVisibility'
 
 export const dynamic = 'force-dynamic'
@@ -9,12 +10,6 @@ function getServiceClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
-}
-
-function toInt(value: string | null, fallback: number, min: number, max: number): number {
-  const n = Number.parseInt(value || '', 10)
-  if (!Number.isFinite(n)) return fallback
-  return Math.min(max, Math.max(min, n))
 }
 
 function normalizeTypeFilter(value: string | null): 'renting' | 'seeking' | null {
@@ -30,10 +25,6 @@ function isAllRegion(value: string | null) {
 function normalizeLocationFilter(value: string | null): string {
   // Keep raw string (trim only). Do NOT convert "全部地区" to empty here,
   // because we want a single source of truth via isAllRegion().
-  return (value || '').trim()
-}
-
-function normalizeSearch(value: string | null): string {
   return (value || '').trim()
 }
 
@@ -98,8 +89,12 @@ export async function GET(request: NextRequest) {
   const type = normalizeTypeFilter(searchParams.get('type'))
   const typeValues = type ? typeCandidates(type) : null
   const location = normalizeLocationFilter(searchParams.get('location'))
-  const search = normalizeSearch(searchParams.get('search'))
-  const limit = toInt(searchParams.get('limit'), 50, 1, 200)
+  const search = normalizeSearchParam(searchParams.get('search'))
+  const page = parsePageParam(searchParams.get('page'))
+  const rawPageSize = searchParams.get('pageSize') ?? searchParams.get('limit')
+  const limit = clampPageSize(rawPageSize, 50, 50)
+  const from = (page - 1) * limit
+  const to = from + limit - 1
   const statusValues = ['published', 'active']
 
   const supabase = getServiceClient()
@@ -113,7 +108,7 @@ export async function GET(request: NextRequest) {
     )
     .in('status', statusValues)
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .range(from, to)
 
   if (type) {
     query = query.in('type', typeValues || [])

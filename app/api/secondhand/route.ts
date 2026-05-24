@@ -3,14 +3,15 @@ import { createClient } from '@supabase/supabase-js'
 import { validateContactFields } from '@/lib/contactValidation'
 import { isPublicOwnerVisible } from '@/lib/publicVisibility'
 import { assertUserCanCreateContent } from '@/lib/accountStatus'
+import { clampPageSize, parsePageParam } from '@/lib/api/params'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const category = searchParams.get('category')
-  const page = parseInt(searchParams.get('page') || '1')
-  const pageSize = parseInt(searchParams.get('pageSize') || '20')
+  const category = searchParams.get('category')?.trim() || null
+  const page = parsePageParam(searchParams.get('page'))
+  const pageSize = clampPageSize(searchParams.get('pageSize'), 20, 50)
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
