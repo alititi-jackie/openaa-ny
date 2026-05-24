@@ -1,78 +1,104 @@
 import { MetadataRoute } from 'next'
-import { SITE_URL } from '@/lib/site'
+import { fetchDynamicSitemapEntries } from '@/lib/sitemap/dynamicEntries'
+import { getServiceSupabaseServerClient } from '@/lib/serverSupabase'
+import { getSiteUrl } from '@/lib/site'
 
-const BASE_URL = SITE_URL
+type SitemapEntry = MetadataRoute.Sitemap[number]
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString()
 
   // Only include public, indexable pages.
   // Do NOT include admin/auth/profile, API routes, publish/edit flows, or "my" pages.
-  return [
+  const staticEntries: SitemapEntry[] = [
     {
-      url: `${BASE_URL}/`,
+      url: getSiteUrl('/'),
       lastModified: now,
+      changeFrequency: 'daily',
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/jobs`,
+      url: getSiteUrl('/jobs'),
       lastModified: now,
+      changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/housing`,
+      url: getSiteUrl('/housing'),
       lastModified: now,
+      changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/secondhand`,
+      url: getSiteUrl('/secondhand'),
       lastModified: now,
+      changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/services`,
+      url: getSiteUrl('/services'),
       lastModified: now,
+      changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/news`,
+      url: getSiteUrl('/news'),
       lastModified: now,
+      changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/navigation`,
+      url: getSiteUrl('/navigation'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
     {
-      url: `${BASE_URL}/dmv`,
+      url: getSiteUrl('/dmv'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
     {
-      url: `${BASE_URL}/dmv/ny/practice`,
+      url: getSiteUrl('/dmv/ny/practice'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
     {
-      url: `${BASE_URL}/dmv/ny/questions`,
+      url: getSiteUrl('/dmv/ny/questions'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
     {
-      url: `${BASE_URL}/dmv/ny/mock-test`,
+      url: getSiteUrl('/dmv/ny/mock-test'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
     {
-      url: `${BASE_URL}/dmv/ny/sign-test`,
+      url: getSiteUrl('/dmv/ny/sign-test'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
     {
-      url: `${BASE_URL}/dmv/tickets`,
+      url: getSiteUrl('/dmv/tickets'),
       lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.64,
     },
   ]
+
+  const supabase = getServiceSupabaseServerClient()
+  if (!supabase) {
+    console.error('Failed to load dynamic sitemap entries: Supabase server client is not configured')
+    return staticEntries
+  }
+
+  const dynamicEntries = await fetchDynamicSitemapEntries(supabase)
+  return [...staticEntries, ...dynamicEntries]
 }
