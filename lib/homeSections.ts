@@ -131,6 +131,15 @@ export const MAIN_SECTION_ROUTE: Record<string, string> = {
   latest_news: '/news',
 }
 
+/** Fixed quick-navigation links shown above "最新发布". Always all 5, regardless of is_visible. */
+export const HOME_QUICK_LINKS: { label: string; href: string }[] = [
+  { label: '招聘', href: '/jobs' },
+  { label: '房屋', href: '/housing' },
+  { label: '二手', href: '/secondhand' },
+  { label: '本地服务', href: '/services' },
+  { label: '新闻', href: '/news' },
+]
+
 export function normalizeHomeLatestSection(input: Partial<HomeLatestSection>): HomeLatestSection | null {
   if (
     typeof input.section_key !== 'string' ||
