@@ -11,6 +11,7 @@ import {
   Home,
   PlusSquare,
   Share2,
+  Bell,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import ProfileHeader from '@/components/ProfileHeader'
@@ -26,6 +27,7 @@ export default function ProfilePage() {
   const [publishOpen, setPublishOpen] = useState(false)
   const [iosA2hsOpen, setIosA2hsOpen] = useState(false)
   const [toast, setToast] = useState<string>('')
+  const [unreadNotifications, setUnreadNotifications] = useState(0)
 
   const showToast = (message: string, durationMs = 1800) => {
     setToast(message)
@@ -41,8 +43,23 @@ export default function ProfilePage() {
       // Guest mode: do NOT redirect; keep page visible
       if (!user) {
         setProfile(null)
+        setUnreadNotifications(0)
         setLoading(false)
         return
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.access_token) {
+        const res = await fetch('/api/user/notifications?limit=1', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).catch(() => null)
+        const json = (await res?.json().catch(() => null)) as { unread_count?: number } | null
+        setUnreadNotifications(res?.ok ? json?.unread_count ?? 0 : 0)
+      } else {
+        setUnreadNotifications(0)
       }
 
       const { data } = await supabase.from('users').select('*').eq('id', user.id).single()
@@ -197,6 +214,31 @@ export default function ProfilePage() {
               <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">查看你最近看过的内容</p>
             </Link>
           </div>
+
+          {/* 通知中心 */}
+          <Link
+            href="/profile/notifications"
+            aria-label="通知中心 - 查看账号、内容和平台相关通知"
+            className="w-full flex items-center justify-between gap-3 p-4 hover:bg-zinc-50 transition border-b border-zinc-100"
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
+                <Bell size={17} className="text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-zinc-900">通知中心</p>
+                  {unreadNotifications > 0 ? (
+                    <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold leading-none text-white">
+                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">查看账号、内容和平台相关通知</p>
+              </div>
+            </div>
+            <span className="shrink-0 text-zinc-300">›</span>
+          </Link>
 
           {/* 管理我的导航 */}
           <Link
