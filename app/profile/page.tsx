@@ -178,17 +178,25 @@ export default function ProfilePage() {
 
         {/* Menu */}
         <div className="bg-white rounded-2xl shadow-[0_2px_14px_rgba(0,0,0,0.06)] ring-1 ring-black/5 overflow-hidden">
-          <Link
-            href="/profile/recent"
-            aria-label="最近浏览 - 查看你最近看过的招聘、房屋、二手、服务和文章"
-            className="w-full flex items-center justify-between p-4 hover:bg-zinc-50 transition border-b border-zinc-100"
-          >
-            <div>
-              <p className="text-zinc-900 font-medium">最近浏览</p>
-              <p className="mt-0.5 text-[11px] text-zinc-500">查看你最近看过的招聘、房屋、二手、服务和文章</p>
-            </div>
-            <span className="text-zinc-300">›</span>
-          </Link>
+          <div className="grid grid-cols-2 border-b border-zinc-100">
+            <Link
+              href="/profile/favorites"
+              aria-label="我的收藏 - 查看你收藏的招聘、房屋、二手和服务"
+              className="min-w-0 border-r border-zinc-100 p-4 transition hover:bg-zinc-50"
+            >
+              <p className="text-sm font-medium text-zinc-900">我的收藏</p>
+              <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">查看你收藏的招聘、房屋、二手和服务</p>
+            </Link>
+
+            <Link
+              href="/profile/recent"
+              aria-label="最近浏览 - 查看你最近看过的内容"
+              className="min-w-0 p-4 transition hover:bg-zinc-50"
+            >
+              <p className="text-sm font-medium text-zinc-900">最近浏览</p>
+              <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">查看你最近看过的内容</p>
+            </Link>
+          </div>
 
           {/* 管理我的导航 */}
           <Link
