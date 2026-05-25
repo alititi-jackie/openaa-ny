@@ -9,6 +9,7 @@ import BackToTopButton from '@/components/BackToTopButton'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
 import RecentViewRecorder from '@/components/RecentViewRecorder'
+import FavoriteButton from '@/components/FavoriteButton'
 import type { ServicePost } from '@/types'
 
 function formatDate(s: string | null) {
@@ -94,11 +95,21 @@ export default function ServiceDetailClient({ post }: { post: ServicePost | null
       {/* Back button */}
       <div className="flex items-center justify-between">
         <DetailBackButton fallbackHref="/services" inToolbar />
-        <ShareButton
-          path={`/services/${post.id}`}
-          title={post.title}
-          text={`${post.category} · ${post.location}`}
-        />
+        <div className="flex items-center gap-2">
+          <FavoriteButton
+            targetType="services"
+            targetId={post.id}
+            targetUrl={`/services/${post.id}`}
+            title={post.title}
+            imageUrl={images[0]}
+            summary={`${post.category} · ${post.location}`}
+          />
+          <ShareButton
+            path={`/services/${post.id}`}
+            title={post.title}
+            text={`${post.category} · ${post.location}`}
+          />
+        </div>
       </div>
 
       {/* Image carousel */}
