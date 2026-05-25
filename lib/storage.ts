@@ -13,6 +13,7 @@ export async function uploadImage(
     .upload(fileName, file, {
       cacheControl: '3600',
       upsert: false,
+      contentType: file.type || undefined,
     })
 
   if (error) return { url: null, error }

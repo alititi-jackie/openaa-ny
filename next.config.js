@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.openaa.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+      },
     ],
   },
 }
