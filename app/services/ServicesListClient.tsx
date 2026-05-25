@@ -162,12 +162,18 @@ export default function ServicesListClient() {
         </div>
 
         {/* Header */}
-        <div className="pb-3">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h1 className="text-xl font-black text-gray-900">本地服务</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            找纽约华人常用服务：装修维修、搬家保洁、汽车驾校、律师会计、电脑手机等。
-          </p>
+          <Link
+            href="/services/publish"
+            className="bg-[#1976d2] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#1565c0] transition"
+          >
+            {'+ \u53d1\u5e03\u670d\u52a1'}
+          </Link>
         </div>
+        <p className="pb-3 text-sm text-gray-500">
+          找纽约华人常用服务：装修维修、搬家保洁、汽车驾校、律师会计、电脑手机等。
+        </p>
       </div>
 
       {/* Search */}
@@ -223,16 +229,6 @@ export default function ServicesListClient() {
         />
       </div>
 
-      {/* Floating publish button */}
-      <div className="fixed bottom-20 right-4 z-50">
-        <Link
-          href="/services/publish"
-          className="flex items-center gap-1.5 bg-[#1976d2] text-white px-4 py-3 rounded-full shadow-lg text-sm font-semibold hover:bg-[#1565c0] transition"
-        >
-          <span className="text-base leading-none">+</span>
-          发布服务
-        </Link>
-      </div>
       <BackToTopButton />
     </div>
   )
