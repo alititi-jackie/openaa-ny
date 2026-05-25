@@ -12,6 +12,7 @@ import NewsTipCard from '@/components/NewsTipCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
 import RecentViewRecorder from '@/components/RecentViewRecorder'
+import FavoriteButton from '@/components/FavoriteButton'
 import { NEWS_DEFAULT_SEO_DESCRIPTION } from '@/lib/news'
 import { getSiteUrl } from '@/lib/site'
 import type { NewsPost } from '@/types'
@@ -201,11 +202,21 @@ export default async function NewsDetailPage({
         </Suspense>
         <div className="flex items-center justify-between">
           <DetailBackButton fallbackHref="/news" label="← 返回" inToolbar />
-          <ShareButton
-            path={`/news/${post.slug}`}
-            title={post.title}
-            text={post.summary || post.title}
-          />
+          <div className="flex items-center gap-2">
+            <FavoriteButton
+              targetType="news"
+              targetId={post.id}
+              targetUrl={`/news/${post.slug}`}
+              title={post.title}
+              imageUrl={post.cover_image_url || undefined}
+              summary={post.summary || post.category}
+            />
+            <ShareButton
+              path={`/news/${post.slug}`}
+              title={post.title}
+              text={post.summary || post.title}
+            />
+          </div>
         </div>
 
         <p className="mt-2 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
