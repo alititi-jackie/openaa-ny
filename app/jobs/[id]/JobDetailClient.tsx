@@ -9,6 +9,7 @@ import ContactInfoCard from '@/components/ContactInfoCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
 import RecentViewRecorder from '@/components/RecentViewRecorder'
+import FavoriteButton from '@/components/FavoriteButton'
 import { formatDate, formatSalary, formatJobLocation } from '@/lib/utils'
 import type { JobPosting } from '@/types'
 import { useState } from 'react'
@@ -35,11 +36,20 @@ export default function JobDetailClient({ job }: { job: JobPosting }) {
       <AdminReturnButton />
       <div className="flex items-center justify-between">
         <DetailBackButton fallbackHref="/jobs" inToolbar />
-        <ShareButton
-          path={`/jobs/${String(job.id)}`}
-          title={job.title}
-          text={`${job.job_type} · ${formatJobLocation(job.location)}${salary ? ` · ${salary}` : ''}`}
-        />
+        <div className="flex items-center gap-2">
+          <FavoriteButton
+            targetType="jobs"
+            targetId={job.id}
+            targetUrl={`/jobs/${String(job.id)}`}
+            title={job.title}
+            summary={`${job.job_type} · ${formatJobLocation(job.location)}${salary ? ` · ${salary}` : ''}`}
+          />
+          <ShareButton
+            path={`/jobs/${String(job.id)}`}
+            title={job.title}
+            text={`${job.job_type} · ${formatJobLocation(job.location)}${salary ? ` · ${salary}` : ''}`}
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm p-6">

@@ -10,6 +10,7 @@ import ContactInfoCard from '@/components/ContactInfoCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
 import RecentViewRecorder from '@/components/RecentViewRecorder'
+import FavoriteButton from '@/components/FavoriteButton'
 import { formatPrice, formatDate } from '@/lib/utils'
 import type { SecondhandItem } from '@/types'
 
@@ -121,11 +122,21 @@ export default function SecondhandDetailClient({ item }: { item: SecondhandItem 
       <AdminReturnButton />
       <div className="flex items-center justify-between">
         <DetailBackButton fallbackHref="/secondhand" inToolbar />
-        <ShareButton
-          path={`/secondhand/${String(item.id)}`}
-          title={item.title}
-          text={`${item.category}${isBuying ? ` · 预算：${budget || '面议'}` : sellingPrice ? ` · ${sellingPrice}` : ''}`}
-        />
+        <div className="flex items-center gap-2">
+          <FavoriteButton
+            targetType="secondhand"
+            targetId={item.id}
+            targetUrl={`/secondhand/${String(item.id)}`}
+            title={item.title}
+            imageUrl={images[0]}
+            summary={`${item.category}${isBuying ? ` · 预算：${budget || '面议'}` : sellingPrice ? ` · ${sellingPrice}` : ''}`}
+          />
+          <ShareButton
+            path={`/secondhand/${String(item.id)}`}
+            title={item.title}
+            text={`${item.category}${isBuying ? ` · 预算：${budget || '面议'}` : sellingPrice ? ` · ${sellingPrice}` : ''}`}
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">

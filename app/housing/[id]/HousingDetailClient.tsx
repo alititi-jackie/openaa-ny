@@ -11,6 +11,7 @@ import ContactInfoCard from '@/components/ContactInfoCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
 import RecentViewRecorder from '@/components/RecentViewRecorder'
+import FavoriteButton from '@/components/FavoriteButton'
 import type { HousingPost } from '@/types'
 
 const AUTO_INTERVAL_MS = 3500
@@ -109,11 +110,21 @@ export default function HousingDetailClient({ post }: { post: HousingPost }) {
       <AdminReturnButton />
       <div className="flex items-center justify-between">
         <DetailBackButton fallbackHref="/housing" inToolbar />
-        <ShareButton
-          path={`/housing/${String(post.id)}`}
-          title={post.title}
-          text={`${post.type === 'seeking' ? '求租' : '出租'} · ${post.location || ''}${hasPrice ? ` · $${rawPrice}/月` : ''}`}
-        />
+        <div className="flex items-center gap-2">
+          <FavoriteButton
+            targetType="housing"
+            targetId={post.id}
+            targetUrl={`/housing/${String(post.id)}`}
+            title={post.title}
+            imageUrl={images[0]}
+            summary={`${post.type === 'seeking' ? '求租' : '出租'} · ${post.location || ''}${hasPrice ? ` · $${rawPrice}/月` : ''}`}
+          />
+          <ShareButton
+            path={`/housing/${String(post.id)}`}
+            title={post.title}
+            text={`${post.type === 'seeking' ? '求租' : '出租'} · ${post.location || ''}${hasPrice ? ` · $${rawPrice}/月` : ''}`}
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
