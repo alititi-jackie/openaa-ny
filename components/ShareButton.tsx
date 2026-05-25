@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { detailActionButtonClass } from '@/components/detailActionButtonStyles'
 import { getSiteUrl } from '@/lib/site'
 
 type ShareButtonProps = {
@@ -11,9 +12,6 @@ type ShareButtonProps = {
   className?: string
   label?: ReactNode
 }
-
-const defaultClassName =
-  'shrink-0 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-sm font-medium text-blue-600 active:scale-[0.97]'
 
 export default function ShareButton({ path, title, text, className, label = '分享' }: ShareButtonProps) {
   const [shareToast, setShareToast] = useState('')
@@ -60,7 +58,7 @@ export default function ShareButton({ path, title, text, className, label = '分
         type="button"
         onClick={handleShare}
         aria-label="分享当前页面"
-        className={className ?? defaultClassName}
+        className={className ?? detailActionButtonClass}
       >
         {label}
       </button>

@@ -2,6 +2,7 @@
 
 import { Heart } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { detailActionButtonClass } from '@/components/detailActionButtonStyles'
 import { supabase } from '@/lib/supabase'
 import type { Favorite, FavoriteTargetType } from '@/types'
 
@@ -14,9 +15,6 @@ type FavoriteButtonProps = {
   summary?: string
   className?: string
 }
-
-const defaultClassName =
-  'shrink-0 rounded-xl border border-blue-200 bg-white px-3 py-1.5 text-sm font-medium text-blue-600 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60'
 
 function normalizeOptionalText(value?: string) {
   const text = value?.trim()
@@ -139,7 +137,7 @@ export default function FavoriteButton({
         disabled={loading}
         aria-label={isFavorited ? '取消收藏' : '收藏'}
         aria-pressed={isFavorited}
-        className={className ?? defaultClassName}
+        className={className ?? detailActionButtonClass}
       >
         <span className="inline-flex items-center gap-1.5">
           <Heart size={15} className={isFavorited ? 'fill-blue-600 text-blue-600' : 'text-blue-600'} aria-hidden="true" />
