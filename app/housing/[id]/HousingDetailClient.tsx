@@ -91,7 +91,8 @@ export default function HousingDetailClient({ post }: { post: HousingPost }) {
   const rawPrice = Number(post.price || 0)
   const hasPrice = Number.isFinite(rawPrice) && rawPrice > 0
   const hasContactInfo = Boolean((post.contact_name || '').trim() || (post.phone || '').trim() || (post.wechat || '').trim())
-  const publisherUsername = post.user?.username || '匿名用户'
+  const publisherEmailPrefix = post.user?.email?.split('@')[0]?.trim()
+  const publisherUsername = post.user?.username?.trim() || publisherEmailPrefix || '匿名用户'
   const publisherAvatarUrl = post.user?.avatar_url || ''
 
   return (
