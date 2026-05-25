@@ -109,6 +109,20 @@ export interface HousingPost {
 
 export type PostModule = 'jobs' | 'housing' | 'secondhand' | 'services'
 
+export type FavoriteTargetType = 'jobs' | 'housing' | 'secondhand' | 'services' | 'news' | 'dmv'
+
+export interface Favorite {
+  id: string
+  user_id: string
+  target_type: FavoriteTargetType
+  target_id: string
+  target_url: string
+  title: string
+  image_url: string | null
+  summary: string | null
+  created_at: string
+}
+
 export type UnifiedPostStatus = 'published' | 'hidden' | 'deleted' | 'unpublished'
 
 export interface UnifiedPost {

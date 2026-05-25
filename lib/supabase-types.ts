@@ -1,6 +1,42 @@
 export type Database = {
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          target_type: 'jobs' | 'housing' | 'secondhand' | 'services' | 'news' | 'dmv'
+          target_id: string
+          target_url: string
+          title: string
+          image_url: string | null
+          summary: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          target_type: 'jobs' | 'housing' | 'secondhand' | 'services' | 'news' | 'dmv'
+          target_id: string
+          target_url: string
+          title: string
+          image_url?: string | null
+          summary?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          target_type?: 'jobs' | 'housing' | 'secondhand' | 'services' | 'news' | 'dmv'
+          target_id?: string
+          target_url?: string
+          title?: string
+          image_url?: string | null
+          summary?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_navigation_links: {
         Row: {
           id: string
