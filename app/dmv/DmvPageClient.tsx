@@ -24,6 +24,7 @@ import ShareButton from '@/components/ShareButton'
 import DmvLicenseProcessModal from '@/components/dmv/DmvLicenseProcessModal'
 import DmvPracticeEntryCards from '@/components/dmv/DmvPracticeEntryCards'
 import ChannelSeoSection from '@/components/ChannelSeoSection'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 import { buildBreadcrumbSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/seo'
 
 const ticketsLink = '/dmv/tickets'
@@ -147,6 +148,15 @@ export default function DmvPageClient({ questionCount, dmvGuides }: DmvPageClien
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-28">
+      <RecentViewRecorder
+        item={{
+          type: 'dmv',
+          id: 'dmv',
+          title: 'OpenAA DMV 工具中心',
+          url: '/dmv',
+          summary: '纽约 DMV 笔试、罚单查询、驾照申请与车辆服务入口',
+        }}
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />

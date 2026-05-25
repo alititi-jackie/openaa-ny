@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Trash2 } from 'lucide-react'
 import DetailBackButton from '@/components/DetailBackButton'
 import { supabase } from '@/lib/supabase'
+import { addRecentView } from '@/lib/recentViews'
 import questionsData from '@/data/openaa-ny-dmv-questions-v1.json'
 
 interface Question {
@@ -70,6 +71,16 @@ export default function WrongQuestionsPage() {
   useEffect(() => {
     setWrongIds(getWrongIds())
     supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
+  }, [])
+
+  useEffect(() => {
+    addRecentView({
+      type: 'dmv',
+      id: 'dmv-ny-wrong-questions',
+      title: '纽约 DMV 错题练习',
+      url: '/dmv/ny/wrong-questions',
+      summary: '自动汇总错题并集中练习',
+    })
   }, [])
 
   const wrongQuestions = allQuestions.filter((q) => wrongIds.includes(String(q.id)))

@@ -9,6 +9,7 @@ import BackToTopButton from '@/components/BackToTopButton'
 import ContactInfoCard from '@/components/ContactInfoCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 import { formatPrice, formatDate } from '@/lib/utils'
 import type { SecondhandItem } from '@/types'
 
@@ -105,6 +106,16 @@ export default function SecondhandDetailClient({ item }: { item: SecondhandItem 
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
+      <RecentViewRecorder
+        item={{
+          type: 'secondhand',
+          id: String(item.id),
+          title: item.title,
+          url: `/secondhand/${String(item.id)}`,
+          imageUrl: images[0],
+          summary: `${item.category}${isBuying ? ` · 预算：${budget || '面议'}` : sellingPrice ? ` · ${sellingPrice}` : ''}`,
+        }}
+      />
       <AdminReturnButton />
       <div className="flex items-center justify-between">
         <DetailBackButton fallbackHref="/secondhand" inToolbar />

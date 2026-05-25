@@ -7,6 +7,7 @@ import BackToTopButton from '@/components/BackToTopButton'
 import ContactInfoCard from '@/components/ContactInfoCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 import { formatDate, formatSalary, formatJobLocation } from '@/lib/utils'
 import type { JobPosting } from '@/types'
 import { useState } from 'react'
@@ -19,6 +20,15 @@ export default function JobDetailClient({ job }: { job: JobPosting }) {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
+      <RecentViewRecorder
+        item={{
+          type: 'jobs',
+          id: String(job.id),
+          title: job.title,
+          url: `/jobs/${String(job.id)}`,
+          summary: `${job.job_type} · ${formatJobLocation(job.location)}${salary ? ` · ${salary}` : ''}`,
+        }}
+      />
       <AdminReturnButton />
       <div className="flex items-center justify-between">
         <DetailBackButton fallbackHref="/jobs" inToolbar />

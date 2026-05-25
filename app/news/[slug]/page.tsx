@@ -11,6 +11,7 @@ import BackToTopButton from '@/components/BackToTopButton'
 import NewsTipCard from '@/components/NewsTipCard'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 import { NEWS_DEFAULT_SEO_DESCRIPTION } from '@/lib/news'
 import { getSiteUrl } from '@/lib/site'
 import type { NewsPost } from '@/types'
@@ -179,6 +180,16 @@ export default async function NewsDetailPage({
 
   return (
     <div className="min-h-screen bg-white pb-24">
+      <RecentViewRecorder
+        item={{
+          type: 'news',
+          id: post.slug,
+          title: post.title,
+          url: `/news/${post.slug}`,
+          imageUrl: post.cover_image_url || undefined,
+          summary: post.summary || post.category,
+        }}
+      />
       <div className="px-4 pt-5">
         <script
           type="application/ld+json"

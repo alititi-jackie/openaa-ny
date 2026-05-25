@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, RotateCcw } from 'lucide-react'
 import DetailBackButton from '@/components/DetailBackButton'
 import { buildBreadcrumbSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/seo'
+import { addRecentView } from '@/lib/recentViews'
 import questionsData from '@/data/openaa-ny-dmv-questions-v1.json'
 
 interface Question {
@@ -103,6 +104,16 @@ export default function SignTestPage() {
   const [score, setScore] = useState({ correct: 0, wrong: 0 })
 
   // NOTE: Hooks must be called unconditionally. Do NOT early-return before this point.
+
+  useEffect(() => {
+    addRecentView({
+      type: 'dmv',
+      id: 'dmv-ny-sign-test',
+      title: '纽约 DMV 交通标志练习',
+      url: '/dmv/ny/sign-test',
+      summary: '交通标志专项练习',
+    })
+  }, [])
 
   // If questions become empty or current index is out of range, reset to a safe state.
   useEffect(() => {

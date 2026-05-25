@@ -14,6 +14,7 @@ import {
 import DetailBackButton from '@/components/DetailBackButton'
 import ShareButton from '@/components/ShareButton'
 import DetailShareCard from '@/components/DetailShareCard'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -884,6 +885,15 @@ export default function TicketsClient() {
 
   return (
     <div className="px-4 pt-4">
+      <RecentViewRecorder
+        item={{
+          type: 'dmv',
+          id: 'dmv-tickets',
+          title: '美国罚单查询入口',
+          url: '/dmv/tickets',
+          summary: '停车罚单、超速罚单、红灯罚单查询教程与官方入口',
+        }}
+      />
       <div className="mb-6 flex items-center justify-between">
         <DetailBackButton fallbackHref="/dmv" label="← 返回 DMV 首页" inToolbar forceHref />
         <ShareButton

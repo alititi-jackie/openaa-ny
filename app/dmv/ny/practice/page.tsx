@@ -9,6 +9,7 @@ import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
 import DmvPracticeEntryCards from '@/components/dmv/DmvPracticeEntryCards'
 import ChannelSeoSection from '@/components/ChannelSeoSection'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 import { buildBreadcrumbSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/seo'
 
 const entryCards = [
@@ -76,6 +77,15 @@ export default function PracticeHomePage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-28">
+      <RecentViewRecorder
+        item={{
+          type: 'dmv',
+          id: 'dmv-ny-practice',
+          title: '纽约 DMV Permit 中文练习系统',
+          url: '/dmv/ny/practice',
+          summary: '题库、随机练习、模拟考试和错题练习',
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
