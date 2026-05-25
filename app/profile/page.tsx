@@ -17,6 +17,7 @@ import ProfileHeader from '@/components/ProfileHeader'
 import type { UserProfile } from '@/types'
 import A2HSButton, { IosA2HSModal } from '@/components/A2HSButton'
 import { shareOpenAA } from '@/lib/share'
+import { getMetadataAvatarUrl } from '@/lib/avatar'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -45,13 +46,32 @@ export default function ProfilePage() {
       }
 
       const { data } = await supabase.from('users').select('*').eq('id', user.id).single()
+      const metadataAvatarUrl = getMetadataAvatarUrl(user.user_metadata)
 
-      if (data) setProfile(data)
+      if (data) {
+        if (!data.avatar_url && metadataAvatarUrl) {
+          const { data: updatedProfile } = await supabase
+            .from('users')
+            .update({
+              avatar_url: metadataAvatarUrl,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id)
+            .is('avatar_url', null)
+            .select('*')
+            .single()
+
+          setProfile((updatedProfile ?? data) as UserProfile)
+        } else {
+          setProfile(data)
+        }
+      }
       else {
         const newProfile = {
           id: user.id,
           email: user.email ?? '',
           username: user.user_metadata?.username ?? user.email?.split('@')[0] ?? '用户',
+          avatar_url: metadataAvatarUrl ?? undefined,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }

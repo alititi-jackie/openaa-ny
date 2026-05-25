@@ -102,6 +102,8 @@ export default function SecondhandDetailClient({ item }: { item: SecondhandItem 
   const sellingPrice = hasVisiblePrice(item.price) ? formatPrice(item.price) : null
   const hasContactInfo = Boolean((item.contact_name || '').trim() || (item.phone || '').trim() || (item.wechat || '').trim())
   const currentImage = imageCount > 0 ? images[activeIndex] : ''
+  const publisherUsername = item.user?.username || '匿名用户'
+  const publisherAvatarUrl = item.user?.avatar_url || ''
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 pb-24">
@@ -268,11 +270,21 @@ export default function SecondhandDetailClient({ item }: { item: SecondhandItem 
           />
 
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#1976d2] flex items-center justify-center text-white font-bold">
-              {item.user?.username?.[0]?.toUpperCase() ?? '?'}
-            </div>
+            {publisherAvatarUrl ? (
+              <Image
+                src={publisherAvatarUrl}
+                alt={publisherUsername}
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[#1976d2] flex items-center justify-center text-white font-bold">
+                {publisherUsername?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
             <div>
-              <p className="font-medium text-gray-900">{item.user?.username ?? '匿名用户'}</p>
+              <p className="font-medium text-gray-900">{publisherUsername}</p>
               <p className="text-xs text-gray-500">发布者</p>
             </div>
           </div>
