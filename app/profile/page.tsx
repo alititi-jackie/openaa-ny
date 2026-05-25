@@ -181,11 +181,11 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 border-b border-zinc-100">
             <Link
               href="/profile/favorites"
-              aria-label="我的收藏 - 查看你收藏的招聘、房屋、二手和服务"
+              aria-label="我的收藏 - 查看你收藏的招聘、房屋、二手、服务和新闻"
               className="min-w-0 border-r border-zinc-100 p-4 transition hover:bg-zinc-50"
             >
               <p className="text-sm font-medium text-zinc-900">我的收藏</p>
-              <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">查看你收藏的招聘、房屋、二手和服务</p>
+              <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">查看你收藏的招聘、房屋、二手、服务和新闻</p>
             </Link>
 
             <Link

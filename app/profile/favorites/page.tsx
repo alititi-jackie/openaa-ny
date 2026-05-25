@@ -7,15 +7,16 @@ import DetailBackButton from '@/components/DetailBackButton'
 import { supabase } from '@/lib/supabase'
 import type { Favorite, FavoriteTargetType } from '@/types'
 
-type CoreFavoriteType = Extract<FavoriteTargetType, 'jobs' | 'housing' | 'secondhand' | 'services'>
+type CoreFavoriteType = Extract<FavoriteTargetType, 'jobs' | 'housing' | 'secondhand' | 'services' | 'news'>
 
-const CORE_TYPES: CoreFavoriteType[] = ['jobs', 'housing', 'secondhand', 'services']
+const CORE_TYPES: CoreFavoriteType[] = ['jobs', 'housing', 'secondhand', 'services', 'news']
 
 const TYPE_LABELS: Record<CoreFavoriteType, string> = {
   jobs: '招聘',
   housing: '房屋',
   secondhand: '二手',
   services: '服务',
+  news: '新闻',
 }
 
 const TYPE_CLASS_NAMES: Record<CoreFavoriteType, string> = {
@@ -23,6 +24,7 @@ const TYPE_CLASS_NAMES: Record<CoreFavoriteType, string> = {
   housing: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
   secondhand: 'bg-amber-50 text-amber-700 ring-amber-100',
   services: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
+  news: 'bg-violet-50 text-violet-700 ring-violet-100',
 }
 
 const FILTERS: Array<{ value: 'all' | CoreFavoriteType; label: string }> = [
@@ -31,6 +33,7 @@ const FILTERS: Array<{ value: 'all' | CoreFavoriteType; label: string }> = [
   { value: 'housing', label: '房屋' },
   { value: 'secondhand', label: '二手' },
   { value: 'services', label: '服务' },
+  { value: 'news', label: '新闻' },
 ]
 
 function isCoreFavoriteType(value: FavoriteTargetType): value is CoreFavoriteType {
