@@ -1,6 +1,25 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { isOwnerPublicVisible } from '@/lib/publicVisibility'
+import { isPublicUserStatusVisible } from '@/lib/publicVisibility'
 import type { HousingPost } from '@/types'
+
+type UserStatusRow = {
+  status: string | null
+}
+
+async function isHousingOwnerVisible(supabase: SupabaseClient, userId: unknown): Promise<boolean> {
+  if (typeof userId !== 'string' || !userId) {
+    return isPublicUserStatusVisible(undefined)
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .select('status')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (error) return false
+  return isPublicUserStatusVisible((data as UserStatusRow | null)?.status)
+}
 
 export async function getPublicHousingById(
   supabase: SupabaseClient,
@@ -8,13 +27,13 @@ export async function getPublicHousingById(
 ): Promise<{ data: HousingPost | null; error: string | null }> {
   const { data, error } = await supabase
     .from('housing_posts')
-    .select('*, user:users(username, avatar_url, status)')
+    .select('*')
     .eq('id', id)
     .in('status', ['published', 'active'])
     .maybeSingle()
 
   if (error) return { data: null, error: error.message }
-  if (!data || !isOwnerPublicVisible((data as { user?: unknown }).user)) {
+  if (!data || !(await isHousingOwnerVisible(supabase, (data as { user_id?: unknown }).user_id))) {
     return { data: null, error: null }
   }
 
