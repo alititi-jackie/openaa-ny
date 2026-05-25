@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { detailActionButtonClass } from '@/components/detailActionButtonStyles'
 
 interface DetailBackButtonProps {
   fallbackHref: string
@@ -35,7 +36,7 @@ export default function DetailBackButton({ fallbackHref, label = '← 返回', i
     <button
       type="button"
       onClick={handleBack}
-      className={`z-30 inline-flex shrink-0 items-center gap-1 rounded-full border border-blue-100 bg-white/95 px-3 py-1.5 text-sm text-blue-600 shadow-sm backdrop-blur ${
+      className={`z-30 ${detailActionButtonClass} ${
         inToolbar ? '' : 'sticky top-14 mb-4'
       }`}
     >
