@@ -124,6 +124,24 @@ export interface Favorite {
   created_at: string
 }
 
+export type NotificationAudience = 'user'
+export type NotificationType = 'system' | 'announcement' | 'account' | 'content' | 'favorite' | 'dmv'
+
+export interface Notification {
+  id: string
+  user_id: string
+  audience: NotificationAudience
+  type: NotificationType
+  title: string
+  body: string
+  link_url: string | null
+  metadata: Record<string, unknown>
+  read_at: string | null
+  created_at: string
+  expires_at: string | null
+  created_by: string | null
+}
+
 export type UnifiedPostStatus = 'published' | 'hidden' | 'deleted' | 'unpublished'
 
 export interface UnifiedPost {

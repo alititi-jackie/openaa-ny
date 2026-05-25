@@ -37,6 +37,51 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          audience: 'user'
+          type: 'system' | 'announcement' | 'account' | 'content' | 'favorite' | 'dmv'
+          title: string
+          body: string
+          link_url: string | null
+          metadata: Record<string, unknown>
+          read_at: string | null
+          created_at: string
+          expires_at: string | null
+          created_by: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          audience?: 'user'
+          type: 'system' | 'announcement' | 'account' | 'content' | 'favorite' | 'dmv'
+          title: string
+          body: string
+          link_url?: string | null
+          metadata?: Record<string, unknown>
+          read_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          created_by?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          audience?: 'user'
+          type?: 'system' | 'announcement' | 'account' | 'content' | 'favorite' | 'dmv'
+          title?: string
+          body?: string
+          link_url?: string | null
+          metadata?: Record<string, unknown>
+          read_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          created_by?: string | null
+        }
+        Relationships: []
+      }
       user_navigation_links: {
         Row: {
           id: string
