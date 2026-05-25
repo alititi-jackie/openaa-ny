@@ -7,6 +7,7 @@ import DetailBackButton from '@/components/DetailBackButton'
 import { supabase } from '@/lib/supabase'
 import { toAbsoluteUrl } from '@/lib/site'
 import { buildBreadcrumbSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/seo'
+import { addRecentView } from '@/lib/recentViews'
 import questionsData from '@/data/openaa-ny-dmv-questions-v1.json'
 
 interface Question {
@@ -102,6 +103,16 @@ export default function MockTestPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
+  }, [])
+
+  useEffect(() => {
+    addRecentView({
+      type: 'dmv',
+      id: 'dmv-ny-mock-test',
+      title: '纽约 DMV 模拟考试',
+      url: '/dmv/ny/mock-test',
+      summary: '20 题中文模拟考试与成绩统计',
+    })
   }, [])
 
   const startExam = useCallback(() => {

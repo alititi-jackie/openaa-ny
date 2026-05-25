@@ -8,6 +8,7 @@ import DetailBackButton from '@/components/DetailBackButton'
 import BackToTopButton from '@/components/BackToTopButton'
 import DetailShareCard from '@/components/DetailShareCard'
 import ShareButton from '@/components/ShareButton'
+import RecentViewRecorder from '@/components/RecentViewRecorder'
 import type { ServicePost } from '@/types'
 
 function formatDate(s: string | null) {
@@ -79,6 +80,16 @@ export default function ServiceDetailClient({ post }: { post: ServicePost | null
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <RecentViewRecorder
+        item={{
+          type: 'services',
+          id: post.id,
+          title: post.title,
+          url: `/services/${post.id}`,
+          imageUrl: images[0],
+          summary: `${post.category} · ${post.location}`,
+        }}
+      />
       <AdminReturnButton />
       {/* Back button */}
       <div className="flex items-center justify-between">

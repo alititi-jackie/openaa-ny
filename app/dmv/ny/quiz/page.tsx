@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, RotateCcw } from 'lucide-react'
 import DetailBackButton from '@/components/DetailBackButton'
 import { supabase } from '@/lib/supabase'
 import { toAbsoluteUrl } from '@/lib/site'
+import { addRecentView } from '@/lib/recentViews'
 import questionsData from '@/data/openaa-ny-dmv-questions-v1.json'
 
 interface Question {
@@ -96,6 +97,16 @@ export default function DMVQuizPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user))
+  }, [])
+
+  useEffect(() => {
+    addRecentView({
+      type: 'dmv',
+      id: 'dmv-ny-quiz',
+      title: '纽约 DMV 随机 / 顺序练习',
+      url: '/dmv/ny/quiz',
+      summary: '全题库随机或顺序练习',
+    })
   }, [])
 
   const totalQuestions = useMemo(() => allQuestions.length, [])

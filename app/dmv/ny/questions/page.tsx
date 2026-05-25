@@ -8,6 +8,7 @@ import DetailBackButton from '@/components/DetailBackButton'
 import HorizontalCategoryTabs from '@/components/HorizontalCategoryTabs'
 import { supabase } from '@/lib/supabase'
 import { buildBreadcrumbSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/seo'
+import { addRecentView } from '@/lib/recentViews'
 import questionsData from '@/data/openaa-ny-dmv-questions-v1.json'
 
 interface Question {
@@ -240,6 +241,16 @@ export default function PracticePage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setIsLoggedIn(!!data.user)
+    })
+  }, [])
+
+  useEffect(() => {
+    addRecentView({
+      type: 'dmv',
+      id: 'dmv-ny-questions',
+      title: '纽约 DMV 中文题库',
+      url: '/dmv/ny/questions',
+      summary: 'Permit 真题练习与答案解析',
     })
   }, [])
 

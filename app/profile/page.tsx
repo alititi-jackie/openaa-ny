@@ -191,6 +191,18 @@ export default function ProfilePage() {
             <span className="text-zinc-300">›</span>
           </Link>
 
+          <Link
+            href="/profile/recent"
+            aria-label="最近浏览 - 查看你最近看过的招聘、房屋、二手、服务和文章"
+            className="w-full flex items-center justify-between p-4 hover:bg-zinc-50 transition border-b border-zinc-100"
+          >
+            <div>
+              <p className="text-zinc-900 font-medium">最近浏览</p>
+              <p className="mt-0.5 text-[11px] text-zinc-500">查看你最近看过的招聘、房屋、二手、服务和文章</p>
+            </div>
+            <span className="text-zinc-300">›</span>
+          </Link>
+
           {/* 我要发布 (expand) */}
           <button
             type="button"
