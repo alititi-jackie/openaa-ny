@@ -11,6 +11,7 @@ export interface UserProfile {
 
 /** Partial user data returned by Supabase joined queries */
 export interface JoinedUser {
+  email?: string | null
   username: string
   avatar_url?: string
   status?: 'active' | 'restricted' | 'banned' | null
