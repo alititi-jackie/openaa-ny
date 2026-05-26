@@ -38,6 +38,11 @@ type PinFormState = {
   pinned_order: number
   pinned_until: string
 }
+type NotificationDraft = {
+  title: string
+  body: string
+  link_url: string
+}
 
 function formatDate(s: string | null | undefined) {
   if (!s) return ''
@@ -108,6 +113,17 @@ function moduleDetailHref(post: AdminUnifiedPost): string {
   if (post.module === 'housing') return `/housing/${post.id}?from_admin=1&return_to=/admin/posts`
   if (post.module === 'services') return `/services/${post.id}?from_admin=1&return_to=/admin/posts`
   return `/secondhand/${post.id}?from_admin=1&return_to=/admin/posts`
+}
+
+function publicModuleDetailHref(post: AdminUnifiedPost): string {
+  if (post.module === 'jobs') return `/jobs/${post.id}`
+  if (post.module === 'housing') return `/housing/${post.id}`
+  if (post.module === 'services') return `/services/${post.id}`
+  return `/secondhand/${post.id}`
+}
+
+function postKey(post: AdminUnifiedPost): string {
+  return `${post.module}-${post.id}`
 }
 
 function typeLabel(post: AdminUnifiedPost): string | null {
@@ -200,6 +216,9 @@ function AdminPostsContent() {
   const [locationFilter, setLocationFilter] = useState('全部地区')
   const [openFilterKey, setOpenFilterKey] = useState<OpenFilterKey>(null)
   const [pinEditingPost, setPinEditingPost] = useState<AdminUnifiedPost | null>(null)
+  const [notifyingPostKey, setNotifyingPostKey] = useState<string | null>(null)
+  const [notificationDrafts, setNotificationDrafts] = useState<Record<string, NotificationDraft>>({})
+  const [sendingNotificationKey, setSendingNotificationKey] = useState<string | null>(null)
   const [pinForm, setPinForm] = useState<PinFormState>({
     is_pinned: false,
     pinned_order: 0,
@@ -272,6 +291,9 @@ function AdminPostsContent() {
     setMessage('')
     setListSuccessMessage('')
     setPinEditingPost(null)
+    setNotifyingPostKey(null)
+    setNotificationDrafts({})
+    setSendingNotificationKey(null)
   }
 
   function scrollToForm() {
@@ -293,6 +315,44 @@ function AdminPostsContent() {
     setMessage('')
     setListSuccessMessage('')
     scrollToForm()
+  }
+
+  function getNotificationDraft(post: AdminUnifiedPost): NotificationDraft {
+    return notificationDrafts[postKey(post)] ?? {
+      title: '',
+      body: '',
+      link_url: publicModuleDetailHref(post),
+    }
+  }
+
+  function updateNotificationDraft(post: AdminUnifiedPost, patch: Partial<NotificationDraft>) {
+    const key = postKey(post)
+    setNotificationDrafts((current) => ({
+      ...current,
+      [key]: {
+        ...(current[key] ?? {
+          title: '',
+          body: '',
+          link_url: publicModuleDetailHref(post),
+        }),
+        ...patch,
+      },
+    }))
+  }
+
+  function toggleNotificationForm(post: AdminUnifiedPost) {
+    const key = postKey(post)
+    setNotifyingPostKey((current) => (current === key ? null : key))
+    setNotificationDrafts((current) => ({
+      ...current,
+      [key]: current[key] ?? {
+        title: '',
+        body: '',
+        link_url: publicModuleDetailHref(post),
+      },
+    }))
+    setMessage('')
+    setListSuccessMessage('')
   }
 
   async function updatePost(post: AdminUnifiedPost, payload: Record<string, unknown>) {
@@ -368,6 +428,70 @@ function AdminPostsContent() {
     if (ok) {
       setListSuccessMessage('已标记为删除')
       setTimeout(() => setListSuccessMessage(''), 4000)
+    }
+  }
+
+  async function sendAuthorNotification(post: AdminUnifiedPost) {
+    const key = postKey(post)
+    const userId = post.user_id?.trim()
+    if (!userId) {
+      setMessage('该帖子缺少发布者 ID，无法发送通知')
+      return
+    }
+
+    const draft = getNotificationDraft(post)
+    const title = draft.title.trim()
+    const body = draft.body.trim()
+    const linkUrl = draft.link_url.trim()
+
+    if (!title) {
+      setMessage('请输入通知标题')
+      return
+    }
+    if (!body) {
+      setMessage('请输入通知内容')
+      return
+    }
+
+    setSendingNotificationKey(key)
+    setMessage('')
+    setListSuccessMessage('')
+    try {
+      const res = await fetch('/api/admin/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': token,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          type: 'content',
+          title,
+          body,
+          link_url: linkUrl || null,
+        }),
+      })
+      const json = (await res.json().catch(() => null)) as { error?: string } | null
+      if (!res.ok) {
+        setMessage(json?.error || '发送通知失败')
+        return
+      }
+
+      setNotifyingPostKey(null)
+      setNotificationDrafts((current) => ({
+        ...current,
+        [key]: {
+          title: '',
+          body: '',
+          link_url: publicModuleDetailHref(post),
+        },
+      }))
+      setListSuccessMessage('通知已发送')
+      setTimeout(() => setListSuccessMessage(''), 4000)
+    } catch {
+      setMessage('网络错误，请稍后重试')
+    } finally {
+      setSendingNotificationKey(null)
     }
   }
 
@@ -670,8 +794,13 @@ function AdminPostsContent() {
           const price = formatPrice(post)
           const deleted = isDeleted(post.status)
           const active = isActive(post.status)
+          const key = postKey(post)
+          const notificationDraft = getNotificationDraft(post)
+          const notificationFormOpen = notifyingPostKey === key
+          const sendingNotification = sendingNotificationKey === key
+          const canNotifyAuthor = Boolean(post.user_id?.trim())
           return (
-            <div key={`${post.module}-${post.id}`} className="rounded-2xl border border-zinc-100 bg-white p-4 shadow-sm">
+            <div key={key} className="rounded-2xl border border-zinc-100 bg-white p-4 shadow-sm">
               <p className="text-base font-bold leading-snug text-zinc-900 line-clamp-2 break-words">{post.title}</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {moduleBadge(post.module)}
@@ -722,6 +851,15 @@ function AdminPostsContent() {
                     置顶设置
                   </button>
                 ) : null}
+                {canNotifyAuthor ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleNotificationForm(post)}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-violet-200 text-violet-700 bg-violet-50 hover:bg-violet-100 transition"
+                  >
+                    通知发布者
+                  </button>
+                ) : null}
                 {!active ? (
                   <button
                     type="button"
@@ -749,6 +887,73 @@ function AdminPostsContent() {
                   </button>
                 ) : null}
               </div>
+
+              {notificationFormOpen ? (
+                <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50/50 p-4">
+                  <p className="mb-3 text-sm text-zinc-600">
+                    发送给发布者：
+                    <span className="break-words font-medium text-zinc-900">{post.user_id}</span>
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="block">
+                      <span className="text-sm font-medium text-zinc-700">类型</span>
+                      <input
+                        type="text"
+                        value="内容"
+                        disabled
+                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-zinc-100 px-3 py-2 text-sm text-zinc-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-medium text-zinc-700">链接（可选）</span>
+                      <input
+                        type="text"
+                        value={notificationDraft.link_url}
+                        onChange={(event) => updateNotificationDraft(post, { link_url: event.target.value })}
+                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </label>
+                  </div>
+                  <label className="mt-3 block">
+                    <span className="text-sm font-medium text-zinc-700">标题</span>
+                    <input
+                      type="text"
+                      value={notificationDraft.title}
+                      onChange={(event) => updateNotificationDraft(post, { title: event.target.value })}
+                      maxLength={200}
+                      className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </label>
+                  <label className="mt-3 block">
+                    <span className="text-sm font-medium text-zinc-700">内容</span>
+                    <textarea
+                      value={notificationDraft.body}
+                      onChange={(event) => updateNotificationDraft(post, { body: event.target.value })}
+                      maxLength={1000}
+                      rows={4}
+                      className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </label>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void sendAuthorNotification(post)}
+                      disabled={sendingNotification}
+                      className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
+                    >
+                      {sendingNotification ? '发送中...' : '发送通知'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotifyingPostKey(null)}
+                      disabled={sendingNotification}
+                      className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                    >
+                      取消
+                    </button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           )
         })}
