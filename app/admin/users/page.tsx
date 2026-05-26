@@ -5,6 +5,7 @@ import Link from 'next/link'
 import AdminPageHeader from '@/components/AdminPageHeader'
 import BackToTopButton from '@/components/BackToTopButton'
 import { clearAdminToken, getAdminToken, setAdminToken } from '@/lib/adminToken'
+import type { NotificationType } from '@/types'
 
 type UserStatus = 'active' | 'restricted' | 'banned'
 type StatusFilter = 'all' | UserStatus
@@ -55,13 +56,36 @@ type CardDraft = {
   banned_reason: string
 }
 
+type NotificationDraft = {
+  type: NotificationType
+  title: string
+  body: string
+  link_url: string
+}
+
 const LIMIT = 20
+
+const DEFAULT_NOTIFICATION_DRAFT: NotificationDraft = {
+  type: 'system',
+  title: '',
+  body: '',
+  link_url: '',
+}
 
 const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: '全部' },
   { value: 'active', label: '正常' },
   { value: 'restricted', label: '限制' },
   { value: 'banned', label: '禁用' },
+]
+
+const NOTIFICATION_TYPE_OPTIONS: { value: NotificationType; label: string }[] = [
+  { value: 'system', label: '系统' },
+  { value: 'announcement', label: '公告' },
+  { value: 'account', label: '账号' },
+  { value: 'content', label: '内容' },
+  { value: 'favorite', label: '收藏' },
+  { value: 'dmv', label: 'DMV' },
 ]
 
 const compactLineClampStyle = {
@@ -127,8 +151,11 @@ export default function AdminUsersPage() {
   const [pageMessage, setPageMessage] = useState('')
   const [warnings, setWarnings] = useState<string[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [notifyingId, setNotifyingId] = useState<string | null>(null)
   const [drafts, setDrafts] = useState<Record<string, CardDraft>>({})
+  const [notificationDrafts, setNotificationDrafts] = useState<Record<string, NotificationDraft>>({})
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [sendingNotificationId, setSendingNotificationId] = useState<string | null>(null)
   const [cardMessages, setCardMessages] = useState<Record<string, { type: 'success' | 'error'; text: string }>>({})
 
   const fetchUsers = useCallback(
@@ -241,6 +268,27 @@ export default function AdminUsersPage() {
     }))
   }
 
+  function getNotificationDraft(userId: string): NotificationDraft {
+    return notificationDrafts[userId] ?? DEFAULT_NOTIFICATION_DRAFT
+  }
+
+  function updateNotificationDraft(userId: string, patch: Partial<NotificationDraft>) {
+    setNotificationDrafts((current) => ({
+      ...current,
+      [userId]: {
+        ...(current[userId] ?? DEFAULT_NOTIFICATION_DRAFT),
+        ...patch,
+      },
+    }))
+  }
+
+  function resetNotificationDraft(userId: string) {
+    setNotificationDrafts((current) => ({
+      ...current,
+      [userId]: DEFAULT_NOTIFICATION_DRAFT,
+    }))
+  }
+
   async function patchUser(user: AdminUser, payload: Record<string, unknown>, successMessage: string) {
     setSavingId(user.id)
     try {
@@ -320,6 +368,54 @@ export default function AdminUsersPage() {
 
   async function disablePostingExempt(user: AdminUser) {
     await patchUser(user, { is_posting_exempt: false }, '已关闭免发布限制')
+  }
+
+  async function sendNotification(user: AdminUser) {
+    const draft = getNotificationDraft(user.id)
+    const title = draft.title.trim()
+    const body = draft.body.trim()
+    const linkUrl = draft.link_url.trim()
+
+    if (!title) {
+      setCardMessage(user.id, 'error', '请输入通知标题')
+      return
+    }
+    if (!body) {
+      setCardMessage(user.id, 'error', '请输入通知内容')
+      return
+    }
+
+    setSendingNotificationId(user.id)
+    try {
+      const res = await fetch('/api/admin/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': token,
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          type: draft.type,
+          title,
+          body,
+          link_url: linkUrl || null,
+        }),
+      })
+      const json = (await res.json().catch(() => null)) as { error?: string } | null
+
+      if (!res.ok) {
+        setCardMessage(user.id, 'error', json?.error || '发送通知失败')
+        return
+      }
+
+      resetNotificationDraft(user.id)
+      setNotifyingId(null)
+      setCardMessage(user.id, 'success', '通知已发送')
+    } catch {
+      setCardMessage(user.id, 'error', '网络错误，请稍后重试')
+    } finally {
+      setSendingNotificationId(null)
+    }
   }
 
   if (!token) {
@@ -445,9 +541,12 @@ export default function AdminUsersPage() {
 
           {users.map((user) => {
             const isEditing = editingId === user.id
+            const isNotifying = notifyingId === user.id
             const draft = drafts[user.id] ?? { admin_note: user.admin_note ?? '', banned_reason: user.banned_reason ?? '' }
+            const notificationDraft = getNotificationDraft(user.id)
             const cardMessage = cardMessages[user.id]
             const saving = savingId === user.id
+            const sendingNotification = sendingNotificationId === user.id
             const isUserBanned = user.status === 'banned'
             const userStatusActionLabel = isUserBanned ? '恢复' : '禁用'
             const onUserStatusAction = () => (isUserBanned ? restoreUser(user) : banUser(user))
@@ -535,6 +634,13 @@ export default function AdminUsersPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setNotifyingId((current) => (current === user.id ? null : user.id))}
+                    className="rounded-lg border border-violet-100 bg-violet-50 px-3 py-1.5 text-sm font-medium text-violet-700 hover:bg-violet-100"
+                  >
+                    发送通知
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => void onPostingExemptAction()}
                     disabled={saving}
                     className={postingExemptActionClassName}
@@ -547,6 +653,84 @@ export default function AdminUsersPage() {
                   <p className={`mt-2 text-sm ${cardMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
                     {cardMessage.text}
                   </p>
+                ) : null}
+
+                {isNotifying ? (
+                  <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
+                    <div className="mb-3 text-sm text-zinc-600">
+                      发送给：
+                      <span className="font-medium text-zinc-900">
+                        {user.username || user.email || user.id}
+                      </span>
+                      {user.username && user.email ? <span className="text-zinc-400"> / {user.email}</span> : null}
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="block">
+                        <span className="text-sm font-medium text-zinc-700">类型</span>
+                        <select
+                          value={notificationDraft.type}
+                          onChange={(event) =>
+                            updateNotificationDraft(user.id, { type: event.target.value as NotificationType })
+                          }
+                          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        >
+                          {NOTIFICATION_TYPE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="block">
+                        <span className="text-sm font-medium text-zinc-700">链接（可选）</span>
+                        <input
+                          type="url"
+                          value={notificationDraft.link_url}
+                          onChange={(event) => updateNotificationDraft(user.id, { link_url: event.target.value })}
+                          placeholder="/profile 或 https://..."
+                          className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        />
+                      </label>
+                    </div>
+                    <label className="mt-3 block">
+                      <span className="text-sm font-medium text-zinc-700">标题</span>
+                      <input
+                        type="text"
+                        value={notificationDraft.title}
+                        onChange={(event) => updateNotificationDraft(user.id, { title: event.target.value })}
+                        maxLength={200}
+                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </label>
+                    <label className="mt-3 block">
+                      <span className="text-sm font-medium text-zinc-700">内容</span>
+                      <textarea
+                        value={notificationDraft.body}
+                        onChange={(event) => updateNotificationDraft(user.id, { body: event.target.value })}
+                        maxLength={1000}
+                        rows={4}
+                        className="mt-1 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </label>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void sendNotification(user)}
+                        disabled={sendingNotification}
+                        className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
+                      >
+                        {sendingNotification ? '发送中...' : '发送通知'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNotifyingId(null)}
+                        disabled={sendingNotification}
+                        className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                      >
+                        取消
+                      </button>
+                    </div>
+                  </div>
                 ) : null}
 
                 {isEditing ? (
