@@ -103,6 +103,14 @@ const ADMIN_ENTRIES: AdminEntry[] = [
     status: '已可用',
     href: '/admin/users',
   },
+  {
+    id: 'notifications',
+    icon: '🔔',
+    title: '通知管理',
+    description: '查看已发送通知、已读状态和删除通知。',
+    status: '已可用',
+    href: '/admin/notifications',
+  },
 ]
 
 const ROADMAP_ITEMS = [
