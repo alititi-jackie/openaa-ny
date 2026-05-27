@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createNotificationForUser } from '@/lib/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +18,13 @@ type PostModule = keyof typeof TABLE_MAP
 // 20260510220000_add_hidden_deleted_status_to_posts.sql.
 // 'unpublished' is kept for backward-compat with pre-migration rows.
 const VALID_STATUSES = ['published', 'hidden', 'deleted', 'unpublished'] as const
+type NormalizedPostStatus = typeof VALID_STATUSES[number]
+
+type PostSnapshot = {
+  status: NormalizedPostStatus
+  userId: string | null
+  title: string
+}
 
 function getServiceClient() {
   return createClient(
@@ -50,6 +58,56 @@ function toPinnedUntil(value: unknown): string | null | undefined {
 function normalizeServiceResponse<T extends Record<string, unknown>>(data: T, isServicePost: boolean): T {
   if (!isServicePost || data.status !== 'active') return data
   return { ...data, status: 'published' }
+}
+
+function normalizePostStatus(status: unknown, isServicePost: boolean): NormalizedPostStatus | null {
+  if (isServicePost && status === 'active') return 'published'
+  if ((VALID_STATUSES as readonly unknown[]).includes(status)) return status as NormalizedPostStatus
+  return null
+}
+
+function getPublicPostLink(module: PostModule, id: string): string {
+  if (module === 'jobs') return `/jobs/${id}`
+  if (module === 'housing') return `/housing/${id}`
+  if (module === 'secondhand') return `/secondhand/${id}`
+  return `/services/${id}`
+}
+
+function getPostStatusNotification(
+  oldStatus: NormalizedPostStatus,
+  newStatus: NormalizedPostStatus,
+  title: string,
+  module: PostModule,
+  id: string
+) {
+  if (oldStatus === 'published' && newStatus === 'hidden') {
+    return {
+      title: '帖子已下架',
+      body: `你的帖子「${title}」已被管理员下架，暂时不会在公开页面展示。如有疑问，请通过“我的”页面中的“反馈与举报”联系 OpenAA 管理员。`,
+      linkUrl: getPublicPostLink(module, id),
+    }
+  }
+
+  if (
+    (oldStatus === 'hidden' || oldStatus === 'unpublished' || oldStatus === 'deleted') &&
+    newStatus === 'published'
+  ) {
+    return {
+      title: '帖子已恢复',
+      body: `你的帖子「${title}」已恢复展示，其他用户现在可以正常查看。`,
+      linkUrl: getPublicPostLink(module, id),
+    }
+  }
+
+  if (oldStatus !== 'deleted' && newStatus === 'deleted') {
+    return {
+      title: '帖子已删除',
+      body: `你的帖子「${title}」已被管理员删除，不再对外展示。如有疑问，请通过“我的”页面中的“反馈与举报”联系 OpenAA 管理员。`,
+      linkUrl: null,
+    }
+  }
+
+  return null
 }
 
 export async function PATCH(
@@ -113,6 +171,30 @@ export async function PATCH(
   const supabase = getServiceClient()
   const isServicePost = module === 'services'
   const dbStatus = isServicePost && status === 'published' ? 'active' : status
+  let oldPost: PostSnapshot | null = null
+
+  if (status !== undefined) {
+    const { data: currentPost, error: currentPostError } = await supabase
+      .from(table)
+      .select('status, user_id, title')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (currentPostError) {
+      console.error('[admin posts] failed to load current post before status update', currentPostError)
+    } else {
+      const currentStatus = normalizePostStatus((currentPost as { status?: unknown } | null)?.status, isServicePost)
+      if (currentStatus) {
+        const userId = (currentPost as { user_id?: unknown } | null)?.user_id
+        const titleValue = (currentPost as { title?: unknown } | null)?.title
+        oldPost = {
+          status: currentStatus,
+          userId: typeof userId === 'string' && userId.trim() ? userId.trim() : null,
+          title: typeof titleValue === 'string' && titleValue.trim() ? titleValue.trim() : '未命名帖子',
+        }
+      }
+    }
+  }
 
   // Prevent setting is_pinned=true on a non-published post.
   if (is_pinned === true) {
@@ -155,5 +237,32 @@ export async function PATCH(
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json({ data: normalizeServiceResponse(data as Record<string, unknown>, isServicePost) })
+
+  const normalizedData = normalizeServiceResponse(data as Record<string, unknown>, isServicePost)
+  const newStatus = normalizePostStatus(normalizedData.status, isServicePost)
+  if (oldPost?.userId && newStatus && oldPost.status !== newStatus) {
+    const notification = getPostStatusNotification(oldPost.status, newStatus, oldPost.title, module, id)
+    if (notification) {
+      try {
+        await createNotificationForUser(supabase, {
+          userId: oldPost.userId,
+          type: 'content',
+          title: notification.title,
+          body: notification.body,
+          linkUrl: notification.linkUrl,
+          metadata: {
+            source: 'admin_post_status_change',
+            module,
+            post_id: id,
+            old_status: oldPost.status,
+            new_status: newStatus,
+          },
+        })
+      } catch (notificationError) {
+        console.error('[admin posts] failed to create status change notification', notificationError)
+      }
+    }
+  }
+
+  return NextResponse.json({ data: normalizedData })
 }
