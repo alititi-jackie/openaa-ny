@@ -24,6 +24,10 @@ type AdminUser = {
   banned_by: string | null
   created_at: string | null
   updated_at: string | null
+  auth_providers: string[]
+  auth_provider_label: string
+  duplicate_email_group_count?: number
+  has_duplicate_email?: boolean
   postCounts: {
     jobs: number
     housing: number
@@ -577,6 +581,12 @@ export default function AdminUsersPage() {
                     </div>
                     <div className="mt-2 space-y-1 text-sm text-zinc-500">
                       <p className="break-words">邮箱：{user.email || '—'}</p>
+                      <p className="break-words">登录方式：{user.auth_provider_label || '未知'}</p>
+                      {user.has_duplicate_email ? (
+                        <p className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-amber-100">
+                          同邮箱存在多个账号，请人工确认
+                        </p>
+                      ) : null}
                       <p className="break-words">电话：{user.phone || '—'}</p>
                       <p>注册时间：{formatDate(user.created_at)}</p>
                       <p>更新时间：{formatDate(user.updated_at)}</p>

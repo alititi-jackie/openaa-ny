@@ -28,7 +28,20 @@ type UserRow = {
   updated_at: string | null
 }
 
+type AuthIdentity = {
+  provider?: string | null
+}
+
+type AuthUser = {
+  id: string
+  email?: string | null
+  identities?: AuthIdentity[] | null
+  app_metadata?: Record<string, unknown> | null
+}
+
 const VALID_STATUS_FILTERS = ['all', 'active', 'restricted', 'banned'] as const
+const AUTH_USERS_PAGE_SIZE = 1000
+const PUBLIC_USERS_PAGE_SIZE = 1000
 
 type StatusFilter = typeof VALID_STATUS_FILTERS[number]
 
@@ -60,6 +73,120 @@ function escapeSearch(value: string): string {
 
 function emptyCounts(): PostCounts {
   return { jobs: 0, housing: 0, secondhand: 0, services: 0, total: 0 }
+}
+
+function normalizeEmail(value: string | null | undefined): string {
+  return (value || '').trim().toLowerCase()
+}
+
+function normalizeProvider(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const provider = value.trim().toLowerCase()
+  return provider || null
+}
+
+function uniqueProviders(providers: Array<string | null>): string[] {
+  return Array.from(new Set(providers.filter(Boolean) as string[]))
+}
+
+function providerLabel(provider: string): string {
+  if (provider === 'email') return '邮箱'
+  if (provider === 'google') return 'Google'
+  if (provider === 'apple') return 'Apple'
+  if (provider === 'wechat' || provider === 'weixin') return '微信'
+  return provider
+}
+
+function getAuthProviders(authUser: AuthUser | undefined): string[] {
+  if (!authUser) return []
+
+  const identityProviders = uniqueProviders(
+    (authUser.identities ?? []).map((identity) => normalizeProvider(identity.provider))
+  )
+  if (identityProviders.length > 0) return identityProviders
+
+  const appMetadata = authUser.app_metadata ?? {}
+  const metadataProviders = appMetadata.providers
+
+  if (Array.isArray(metadataProviders)) {
+    const providers = uniqueProviders(metadataProviders.map((provider) => normalizeProvider(provider)))
+    if (providers.length > 0) return providers
+  }
+
+  const provider = normalizeProvider(appMetadata.provider)
+  return provider ? [provider] : []
+}
+
+function getAuthProviderLabel(providers: string[]): string {
+  if (providers.length === 0) return '未知'
+  return providers.map(providerLabel).join(' / ')
+}
+
+async function fetchAllAuthUsers(
+  supabase: ReturnType<typeof getServiceClient>
+): Promise<{ users: AuthUser[]; warning?: string }> {
+  const users: AuthUser[] = []
+
+  for (let page = 1; page <= 100; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage: AUTH_USERS_PAGE_SIZE,
+    })
+
+    if (error) {
+      return { users, warning: 'Auth users 读取失败，登录方式和重复邮箱标记可能不完整' }
+    }
+
+    const pageUsers = (data?.users ?? []) as AuthUser[]
+    users.push(...pageUsers)
+    if (pageUsers.length < AUTH_USERS_PAGE_SIZE) break
+  }
+
+  return { users }
+}
+
+async function fetchAllPublicUserEmails(
+  supabase: ReturnType<typeof getServiceClient>
+): Promise<{ users: Pick<UserRow, 'id' | 'email'>[]; warning?: string }> {
+  const users: Pick<UserRow, 'id' | 'email'>[] = []
+
+  for (let from = 0; from < 100000; from += PUBLIC_USERS_PAGE_SIZE) {
+    const to = from + PUBLIC_USERS_PAGE_SIZE - 1
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email')
+      .order('id', { ascending: true })
+      .range(from, to)
+
+    if (error) {
+      return { users, warning: '用户邮箱重复检查失败' }
+    }
+
+    const rows = (data ?? []) as Pick<UserRow, 'id' | 'email'>[]
+    users.push(...rows)
+    if (rows.length < PUBLIC_USERS_PAGE_SIZE) break
+  }
+
+  return { users }
+}
+
+function getDuplicateEmailCounts(users: Array<{ id: string; email?: string | null }>): Record<string, number> {
+  const grouped = new Map<string, Set<string>>()
+
+  for (const user of users) {
+    const email = normalizeEmail(user.email)
+    if (!email || !user.id) continue
+    const ids = grouped.get(email) ?? new Set<string>()
+    ids.add(user.id)
+    grouped.set(email, ids)
+  }
+
+  const counts: Record<string, number> = {}
+  for (const [email, ids] of grouped) {
+    if (ids.size > 1) counts[email] = ids.size
+  }
+
+  return counts
 }
 
 async function countUsers(
@@ -146,16 +273,22 @@ export async function GET(request: NextRequest) {
   const userIds = rows.map((user) => user.id).filter(Boolean)
   const warnings: string[] = []
 
-  const [jobs, housing, secondhand, services] = await Promise.all([
+  const [jobs, housing, secondhand, services, authUsersResult, publicUserEmailsResult] = await Promise.all([
     countPostsByUser(supabase, 'job_postings', userIds),
     countPostsByUser(supabase, 'housing_posts', userIds),
     countPostsByUser(supabase, 'secondhand_items', userIds),
     countPostsByUser(supabase, 'service_posts', userIds),
+    fetchAllAuthUsers(supabase),
+    fetchAllPublicUserEmails(supabase),
   ])
 
-  for (const result of [jobs, housing, secondhand, services]) {
+  for (const result of [jobs, housing, secondhand, services, authUsersResult, publicUserEmailsResult]) {
     if (result.warning) warnings.push(result.warning)
   }
+
+  const authUsersById = new Map(authUsersResult.users.map((user) => [user.id, user]))
+  const authDuplicateEmailCounts = getDuplicateEmailCounts(authUsersResult.users)
+  const publicDuplicateEmailCounts = getDuplicateEmailCounts(publicUserEmailsResult.users)
 
   const users = rows.map((user) => {
     const postCounts = emptyCounts()
@@ -164,6 +297,12 @@ export async function GET(request: NextRequest) {
     postCounts.secondhand = secondhand.counts[user.id] ?? 0
     postCounts.services = services.counts[user.id] ?? 0
     postCounts.total = postCounts.jobs + postCounts.housing + postCounts.secondhand + postCounts.services
+    const authProviders = getAuthProviders(authUsersById.get(user.id))
+    const normalizedEmail = normalizeEmail(user.email)
+    const duplicateEmailGroupCount = Math.max(
+      authDuplicateEmailCounts[normalizedEmail] ?? 0,
+      publicDuplicateEmailCounts[normalizedEmail] ?? 0
+    )
 
     return {
       id: user.id,
@@ -179,6 +318,16 @@ export async function GET(request: NextRequest) {
       banned_by: user.banned_by,
       created_at: user.created_at,
       updated_at: user.updated_at,
+      auth_providers: authProviders,
+      auth_provider_label: getAuthProviderLabel(authProviders),
+      ...(duplicateEmailGroupCount > 1
+        ? {
+            duplicate_email_group_count: duplicateEmailGroupCount,
+            has_duplicate_email: true,
+          }
+        : {
+            has_duplicate_email: false,
+          }),
       postCounts,
     }
   })
