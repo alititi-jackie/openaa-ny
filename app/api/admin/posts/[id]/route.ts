@@ -73,6 +73,13 @@ function getPublicPostLink(module: PostModule, id: string): string {
   return `/services/${id}`
 }
 
+function getProfilePostListLink(module: PostModule): string {
+  if (module === 'jobs') return '/profile/my-jobs'
+  if (module === 'housing') return '/profile/my-housing'
+  if (module === 'secondhand') return '/profile/my-items'
+  return '/profile/my-services'
+}
+
 function getPostStatusNotification(
   oldStatus: NormalizedPostStatus,
   newStatus: NormalizedPostStatus,
@@ -84,7 +91,7 @@ function getPostStatusNotification(
     return {
       title: '帖子已下架',
       body: `你的帖子「${title}」已被管理员下架，暂时不会在公开页面展示。如有疑问，请通过“我的”页面中的“反馈与举报”联系 OpenAA 管理员。`,
-      linkUrl: getPublicPostLink(module, id),
+      linkUrl: getProfilePostListLink(module),
     }
   }
 
