@@ -1,4 +1,6 @@
+import 'server-only'
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 export const NOTIFICATION_TYPES = ['system', 'announcement', 'account', 'content', 'favorite', 'dmv'] as const
 
@@ -52,4 +54,54 @@ export function validateNotificationText(title: string, body: string, linkUrl: s
     return NextResponse.json({ error: 'link_url is too long' }, { status: 400 })
   }
   return null
+}
+
+export type CreateNotificationForUserInput = {
+  userId: string
+  type: NotificationType
+  title: string
+  body: string
+  linkUrl?: string | null
+  metadata?: Record<string, unknown>
+  expiresAt?: string | null
+  createdBy?: string | null
+}
+
+export async function createNotificationForUser(
+  supabase: SupabaseClient,
+  input: CreateNotificationForUserInput
+) {
+  const userId = toTrimmedString(input.userId)
+  const title = toTrimmedString(input.title)
+  const body = toTrimmedString(input.body)
+  const linkUrl = toNullableTrimmedString(input.linkUrl)
+  const expiresAt = input.expiresAt ?? null
+  const createdBy = input.createdBy ?? null
+  const metadata = input.metadata ?? {}
+
+  if (!userId) throw new Error('user_id is required')
+  if (!isNotificationType(input.type)) throw new Error('Invalid type')
+  if (!isPlainMetadata(metadata)) throw new Error('metadata must be an object')
+
+  const textError = validateNotificationText(title, body, linkUrl)
+  if (textError) throw new Error('Invalid notification text')
+
+  const { data, error } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: userId,
+      audience: 'user',
+      type: input.type,
+      title,
+      body,
+      link_url: linkUrl,
+      metadata,
+      expires_at: expiresAt,
+      created_by: createdBy,
+    })
+    .select(NOTIFICATIONS_SELECT)
+    .single()
+
+  if (error) throw error
+  return data
 }
