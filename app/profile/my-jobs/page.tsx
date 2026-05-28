@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { assertUserCanDeleteOwnContent } from '@/lib/accountStatus'
+import {
+  assertUserCanDeleteOwnContent,
+  assertUserCanHideContent,
+  assertUserCanRestoreContent,
+} from '@/lib/accountStatus'
 import { formatSalary } from '@/lib/utils'
 import BackToTopButton from '@/components/BackToTopButton'
 import DetailBackButton from '@/components/DetailBackButton'
@@ -37,7 +41,7 @@ function displaySalary(job: JobPosting) {
 }
 
 function isAdminHidden(job: JobPosting) {
-  return job.status === 'hidden'
+  return job.status === 'hidden' && job.admin_hidden === true
 }
 
 export default function MyJobsPage() {
@@ -66,6 +70,72 @@ export default function MyJobsPage() {
     }
     fetchJobs()
   }, [router])
+
+  const handleHide = async (id: number) => {
+    if (!confirm('确认隐藏此招聘信息？')) return
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    const permission = await assertUserCanHideContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
+
+    const { error } = await supabase
+      .from('job_postings')
+      .update({ status: 'hidden', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      alert(`操作失败：${error.message}`)
+      return
+    }
+
+    setJobs((prev) =>
+      prev.map((job) => (job.id === id ? { ...job, status: 'hidden', admin_hidden: false } : job))
+    )
+  }
+
+  const handleRestore = async (id: number) => {
+    if (jobs.some((job) => job.id === id && isAdminHidden(job))) return
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    const permission = await assertUserCanRestoreContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
+
+    const { error } = await supabase
+      .from('job_postings')
+      .update({ status: 'published', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .eq('status', 'hidden')
+      .eq('admin_hidden', false)
+
+    if (error) {
+      alert(`操作失败：${error.message}`)
+      return
+    }
+
+    setJobs((prev) => prev.map((job) => (job.id === id ? { ...job, status: 'published' } : job)))
+  }
 
   const handleDelete = async (id: number) => {
     if (!confirm('确认删除此职位？')) return
@@ -149,6 +219,10 @@ export default function MyJobsPage() {
                       <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
                         已被管理员下架
                       </span>
+                    ) : job.status === 'hidden' ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
+                        已隐藏
+                      </span>
                     ) : null}
                   </div>
 
@@ -173,6 +247,21 @@ export default function MyJobsPage() {
                 >
                   编辑
                 </Link>
+                {job.status === 'published' ? (
+                  <button
+                    onClick={() => handleHide(job.id)}
+                    className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-amber-700 ring-1 ring-amber-200 bg-amber-50 hover:bg-amber-100 transition"
+                  >
+                    隐藏
+                  </button>
+                ) : job.status === 'hidden' && !isAdminHidden(job) ? (
+                  <button
+                    onClick={() => handleRestore(job.id)}
+                    className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition"
+                  >
+                    恢复显示
+                  </button>
+                ) : null}
                 <button
                   onClick={() => handleDelete(job.id)}
                   className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-red-600 ring-1 ring-red-200 bg-red-50 hover:bg-red-100 transition"
