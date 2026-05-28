@@ -44,6 +44,20 @@ function isAdminHidden(job: JobPosting) {
   return job.status === 'hidden' && job.admin_hidden === true
 }
 
+function statusLabel(job: JobPosting) {
+  if (job.status === 'deleted') return '已删除'
+  if (isAdminHidden(job)) return '已被管理员下架'
+  if (job.status === 'hidden') return '已隐藏'
+  return '显示中'
+}
+
+function statusBadgeClass(job: JobPosting) {
+  if (job.status === 'deleted') return 'bg-red-50 text-red-600 ring-1 ring-red-100'
+  if (isAdminHidden(job)) return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+  if (job.status === 'hidden') return 'bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100'
+  return 'bg-blue-50 text-blue-700 ring-1 ring-blue-100'
+}
+
 export default function MyJobsPage() {
   const router = useRouter()
   const [jobs, setJobs] = useState<JobPosting[]>([])
@@ -63,6 +77,7 @@ export default function MyJobsPage() {
         .from('job_postings')
         .select('*')
         .eq('user_id', user.id)
+        .neq('status', 'deleted')
         .order('created_at', { ascending: false })
 
       setJobs(data || [])
@@ -207,21 +222,15 @@ export default function MyJobsPage() {
                     <h3 className="font-semibold text-gray-900 truncate max-w-[260px] sm:max-w-[520px]">
                       {job.title}
                     </h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadgeClass(job)}`}>
+                      {statusLabel(job)}
+                    </span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${jobTypeBadgeClass(job.type)}`}>
                       {jobTypeLabel(job.type)}
                     </span>
                     {job.job_type ? (
                       <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
                         {job.job_type}
-                      </span>
-                    ) : null}
-                    {isAdminHidden(job) ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                        已被管理员下架
-                      </span>
-                    ) : job.status === 'hidden' ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
-                        已隐藏
                       </span>
                     ) : null}
                   </div>
@@ -240,31 +249,39 @@ export default function MyJobsPage() {
                 </div>
               ) : null}
 
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-4 flex items-center gap-2 flex-wrap">
+                {job.status === 'published' ? (
+                  <Link
+                    href={`/jobs/${job.id}`}
+                    className="px-3 py-2 rounded-lg text-sm text-zinc-800 ring-1 ring-zinc-300 bg-white hover:bg-zinc-50 transition"
+                  >
+                    查看
+                  </Link>
+                ) : null}
                 <Link
                   href={`/jobs/edit/${job.id}`}
-                  className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-zinc-800 ring-1 ring-zinc-300 bg-white hover:bg-zinc-50 transition"
+                  className="px-3 py-2 rounded-lg text-sm text-zinc-800 ring-1 ring-zinc-300 bg-white hover:bg-zinc-50 transition"
                 >
                   编辑
                 </Link>
                 {job.status === 'published' ? (
                   <button
                     onClick={() => handleHide(job.id)}
-                    className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-amber-700 ring-1 ring-amber-200 bg-amber-50 hover:bg-amber-100 transition"
+                    className="px-3 py-2 rounded-lg text-sm text-amber-700 ring-1 ring-amber-200 bg-amber-50 hover:bg-amber-100 transition"
                   >
                     隐藏
                   </button>
                 ) : job.status === 'hidden' && !isAdminHidden(job) ? (
                   <button
                     onClick={() => handleRestore(job.id)}
-                    className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition"
+                    className="px-3 py-2 rounded-lg text-sm text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition"
                   >
                     恢复显示
                   </button>
                 ) : null}
                 <button
                   onClick={() => handleDelete(job.id)}
-                  className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-red-600 ring-1 ring-red-200 bg-red-50 hover:bg-red-100 transition"
+                  className="px-3 py-2 rounded-lg text-sm text-red-600 ring-1 ring-red-200 bg-red-50 hover:bg-red-100 transition"
                 >
                   删除
                 </button>
