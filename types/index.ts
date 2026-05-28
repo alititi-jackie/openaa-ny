@@ -39,6 +39,10 @@ export interface SecondhandItem {
   is_pinned?: boolean
   pinned_until?: string | null
   pinned_order?: number
+  admin_hidden: boolean
+  admin_hidden_at: string | null
+  admin_hidden_by: string | null
+  admin_hidden_reason: string | null
 }
 
 export type JobPostingType = 'hiring' | 'seeking'
@@ -75,6 +79,10 @@ export interface JobPosting {
   is_pinned?: boolean
   pinned_until?: string | null
   pinned_order?: number
+  admin_hidden: boolean
+  admin_hidden_at: string | null
+  admin_hidden_by: string | null
+  admin_hidden_reason: string | null
 }
 
 export type HousingPostType = 'renting' | 'seeking'
@@ -106,6 +114,10 @@ export interface HousingPost {
   is_pinned?: boolean
   pinned_until?: string | null
   pinned_order?: number
+  admin_hidden: boolean
+  admin_hidden_at: string | null
+  admin_hidden_by: string | null
+  admin_hidden_reason: string | null
 }
 
 export type PostModule = 'jobs' | 'housing' | 'secondhand' | 'services'
@@ -168,6 +180,10 @@ export interface UnifiedPost {
   is_pinned?: boolean
   pinned_until?: string | null
   pinned_order?: number
+  admin_hidden?: boolean
+  admin_hidden_at?: string | null
+  admin_hidden_by?: string | null
+  admin_hidden_reason?: string | null
 }
 
 export type ServicePostStatus = 'active' | 'published' | 'hidden' | 'deleted'
@@ -191,6 +207,10 @@ export interface ServicePost {
   is_pinned?: boolean
   pinned_until?: string | null
   pinned_order?: number
+  admin_hidden: boolean
+  admin_hidden_at: string | null
+  admin_hidden_by: string | null
+  admin_hidden_reason: string | null
 }
 
 export interface NewsPost {

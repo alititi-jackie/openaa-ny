@@ -4,7 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { assertUserCanDeleteOwnContent } from '@/lib/accountStatus'
+import {
+  assertUserCanDeleteOwnContent,
+  assertUserCanHideContent,
+  assertUserCanRestoreContent,
+} from '@/lib/accountStatus'
 import BackToTopButton from '@/components/BackToTopButton'
 import DetailBackButton from '@/components/DetailBackButton'
 import type { SecondhandItem } from '@/types'
@@ -46,6 +50,10 @@ function displayPrice(item: SecondhandItem) {
   return `$${price}`
 }
 
+function isAdminHidden(item: SecondhandItem) {
+  return item.status === 'hidden' && item.admin_hidden === true
+}
+
 export default function MyItemsPage() {
   const router = useRouter()
   const [items, setItems] = useState<SecondhandItem[]>([])
@@ -62,16 +70,82 @@ export default function MyItemsPage() {
       }
 
       const { data } = await supabase
-        .from('secondhand_items')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+          .from('secondhand_items')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
 
       setItems(data || [])
       setLoading(false)
     }
     fetchItems()
   }, [router])
+
+  const handleHide = async (id: number) => {
+    if (!confirm('确认隐藏此商品？')) return
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    const permission = await assertUserCanHideContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
+
+    const { error } = await supabase
+      .from('secondhand_items')
+      .update({ status: 'hidden', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+
+    if (error) {
+      alert(`操作失败：${error.message}`)
+      return
+    }
+
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status: 'hidden', admin_hidden: false } : item))
+    )
+  }
+
+  const handleRestore = async (id: number) => {
+    if (items.some((item) => item.id === id && isAdminHidden(item))) return
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    const permission = await assertUserCanRestoreContent(supabase, user.id)
+    if (!permission.allowed) {
+      alert(permission.message || '账号状态暂时无法验证，请稍后重试。')
+      return
+    }
+
+    const { error } = await supabase
+      .from('secondhand_items')
+      .update({ status: 'published', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .eq('status', 'hidden')
+      .eq('admin_hidden', false)
+
+    if (error) {
+      alert(`操作失败：${error.message}`)
+      return
+    }
+
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, status: 'published' } : item)))
+  }
 
   const handleDelete = async (id: number) => {
     if (!confirm('确认删除此商品？')) return
@@ -159,6 +233,15 @@ export default function MyItemsPage() {
                           {item.category}
                         </span>
                       ) : null}
+                      {isAdminHidden(item) ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                          已被管理员下架
+                        </span>
+                      ) : item.status === 'hidden' ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
+                          已隐藏
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="mt-2 text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
@@ -169,6 +252,12 @@ export default function MyItemsPage() {
                   </div>
                 </div>
 
+                {isAdminHidden(item) ? (
+                  <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    该内容已被管理员下架，暂时不会在公开页面展示。你可以修改后重新提交，或删除该内容。
+                  </div>
+                ) : null}
+
                 <div className="mt-4 flex items-center gap-2">
                   <Link
                     href={`/secondhand/edit/${item.id}`}
@@ -176,6 +265,21 @@ export default function MyItemsPage() {
                   >
                     编辑
                   </Link>
+                  {item.status === 'published' ? (
+                    <button
+                      onClick={() => handleHide(item.id)}
+                      className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-amber-700 ring-1 ring-amber-200 bg-amber-50 hover:bg-amber-100 transition"
+                    >
+                      隐藏
+                    </button>
+                  ) : item.status === 'hidden' && !isAdminHidden(item) ? (
+                    <button
+                      onClick={() => handleRestore(item.id)}
+                      className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition"
+                    >
+                      恢复显示
+                    </button>
+                  ) : null}
                   <button
                     onClick={() => handleDelete(item.id)}
                     className="flex-1 text-center px-3 py-2 rounded-lg text-sm text-red-600 ring-1 ring-red-200 bg-red-50 hover:bg-red-100 transition"

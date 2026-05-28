@@ -26,15 +26,21 @@ function formatDate(s: string | null) {
   }
 }
 
-function statusLabel(status: string, isActive: boolean) {
-  if (status === 'deleted') return '已删除'
-  if (status === 'hidden' || !isActive) return '已隐藏'
+function isAdminHidden(post: ServicePost) {
+  return post.status === 'hidden' && post.admin_hidden === true
+}
+
+function statusLabel(post: ServicePost) {
+  if (post.status === 'deleted') return '已删除'
+  if (isAdminHidden(post)) return '已被管理员下架'
+  if (post.status === 'hidden' || !post.is_active) return '已隐藏'
   return '显示中'
 }
 
-function statusBadgeClass(status: string, isActive: boolean) {
-  if (status === 'deleted') return 'bg-red-50 text-red-600 ring-1 ring-red-100'
-  if (status === 'hidden' || !isActive) return 'bg-zinc-50 text-zinc-500 ring-1 ring-zinc-100'
+function statusBadgeClass(post: ServicePost) {
+  if (post.status === 'deleted') return 'bg-red-50 text-red-600 ring-1 ring-red-100'
+  if (isAdminHidden(post)) return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+  if (post.status === 'hidden' || !post.is_active) return 'bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100'
   return 'bg-blue-50 text-blue-700 ring-1 ring-blue-100'
 }
 
@@ -55,11 +61,11 @@ export default function MyServicesPage() {
       }
 
       const { data } = await supabase
-        .from('service_posts')
-        .select('*')
-        .eq('user_id', user.id)
-        .neq('status', 'deleted')
-        .order('created_at', { ascending: false })
+          .from('service_posts')
+          .select('*')
+          .eq('user_id', user.id)
+          .neq('status', 'deleted')
+          .order('created_at', { ascending: false })
 
       setPosts(data || [])
       setLoading(false)
@@ -92,10 +98,16 @@ export default function MyServicesPage() {
       return
     }
 
-    setPosts((prev) => prev.map((p) => p.id === id ? { ...p, status: 'hidden', is_active: false } : p))
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, status: 'hidden', is_active: false, admin_hidden: false } : p
+      )
+    )
   }
 
   const handleRestore = async (id: string) => {
+    if (posts.some((post) => post.id === id && isAdminHidden(post))) return
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth/login'); return }
 
@@ -110,6 +122,8 @@ export default function MyServicesPage() {
       .update({ status: 'active', is_active: true, updated_at: new Date().toISOString() })
       .eq('id', id)
       .eq('user_id', user.id)
+      .eq('status', 'hidden')
+      .eq('admin_hidden', false)
       .select()
       .single()
 
@@ -187,8 +201,8 @@ export default function MyServicesPage() {
                     <h3 className="font-semibold text-gray-900 truncate max-w-[240px] sm:max-w-[480px]">
                       {post.title}
                     </h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadgeClass(post.status, post.is_active)}`}>
-                      {statusLabel(post.status, post.is_active)}
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadgeClass(post)}`}>
+                      {statusLabel(post)}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
                       {post.category}
@@ -201,13 +215,21 @@ export default function MyServicesPage() {
                 </div>
               </div>
 
+              {isAdminHidden(post) ? (
+                <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  该内容已被管理员下架，暂时不会在公开页面展示。你可以修改后重新提交，或删除该内容。
+                </div>
+              ) : null}
+
               <div className="mt-4 flex items-center gap-2 flex-wrap">
-                <Link
-                  href={`/services/${post.id}`}
-                  className="px-3 py-2 rounded-lg text-sm text-zinc-800 ring-1 ring-zinc-300 bg-white hover:bg-zinc-50 transition"
-                >
-                  查看
-                </Link>
+                {post.status === 'active' && post.is_active ? (
+                  <Link
+                    href={`/services/${post.id}`}
+                    className="px-3 py-2 rounded-lg text-sm text-zinc-800 ring-1 ring-zinc-300 bg-white hover:bg-zinc-50 transition"
+                  >
+                    查看
+                  </Link>
+                ) : null}
                 <Link
                   href={`/services/edit/${post.id}`}
                   className="px-3 py-2 rounded-lg text-sm text-zinc-800 ring-1 ring-zinc-300 bg-white hover:bg-zinc-50 transition"
@@ -221,14 +243,14 @@ export default function MyServicesPage() {
                   >
                     隐藏
                   </button>
-                ) : (
+                ) : !isAdminHidden(post) && (post.status === 'hidden' || !post.is_active) ? (
                   <button
                     onClick={() => handleRestore(post.id)}
                     className="px-3 py-2 rounded-lg text-sm text-emerald-700 ring-1 ring-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition"
                   >
                     恢复显示
                   </button>
-                )}
+                ) : null}
                 <button
                   onClick={() => handleDelete(post.id)}
                   className="px-3 py-2 rounded-lg text-sm text-red-600 ring-1 ring-red-200 bg-red-50 hover:bg-red-100 transition"
