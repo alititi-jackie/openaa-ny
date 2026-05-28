@@ -1,6 +1,324 @@
 export type Database = {
   public: {
     Tables: {
+      job_postings: {
+        Row: {
+          id: number
+          user_id: string
+          type: 'hiring' | 'seeking'
+          contact_name: string | null
+          phone: string | null
+          wechat: string | null
+          title: string
+          company: string
+          description: string
+          salary_min: number | null
+          salary_max: number | null
+          salary_unit: '/小时' | '/月薪' | '/年薪'
+          location: string
+          job_type: string
+          category: string
+          status: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views: number
+          created_at: string
+          updated_at: string
+          is_pinned: boolean
+          pinned_until: string | null
+          pinned_order: number
+          admin_hidden: boolean
+          admin_hidden_at: string | null
+          admin_hidden_by: string | null
+          admin_hidden_reason: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          type?: 'hiring' | 'seeking'
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          title: string
+          company: string
+          description: string
+          salary_min?: number | null
+          salary_max?: number | null
+          salary_unit?: '/小时' | '/月薪' | '/年薪'
+          location: string
+          job_type: string
+          category: string
+          status?: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views?: number
+          created_at?: string
+          updated_at?: string
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          type?: 'hiring' | 'seeking'
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          title?: string
+          company?: string
+          description?: string
+          salary_min?: number | null
+          salary_max?: number | null
+          salary_unit?: '/小时' | '/月薪' | '/年薪'
+          location?: string
+          job_type?: string
+          category?: string
+          status?: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views?: number
+          created_at?: string
+          updated_at?: string
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Relationships: []
+      }
+      housing_posts: {
+        Row: {
+          id: number
+          user_id: string
+          type: 'renting' | 'seeking'
+          title: string
+          description: string
+          price: number
+          location: string
+          room_type: string
+          contact: string
+          contact_name: string | null
+          phone: string | null
+          wechat: string | null
+          images: string[]
+          status: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views: number
+          created_at: string
+          updated_at: string
+          is_pinned: boolean
+          pinned_until: string | null
+          pinned_order: number
+          admin_hidden: boolean
+          admin_hidden_at: string | null
+          admin_hidden_by: string | null
+          admin_hidden_reason: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          type?: 'renting' | 'seeking'
+          title?: string
+          description: string
+          price?: number
+          location?: string
+          room_type?: string
+          contact?: string
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          images?: string[]
+          status?: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views?: number
+          created_at?: string
+          updated_at?: string
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          type?: 'renting' | 'seeking'
+          title?: string
+          description?: string
+          price?: number
+          location?: string
+          room_type?: string
+          contact?: string
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          images?: string[]
+          status?: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views?: number
+          created_at?: string
+          updated_at?: string
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Relationships: []
+      }
+      secondhand_items: {
+        Row: {
+          id: number
+          user_id: string
+          title: string
+          description: string
+          price: number | null
+          category: string
+          images: string[]
+          status: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views: number
+          created_at: string
+          updated_at: string
+          type: 'selling' | 'buying'
+          contact_name: string | null
+          phone: string | null
+          wechat: string | null
+          is_pinned: boolean
+          pinned_until: string | null
+          pinned_order: number
+          admin_hidden: boolean
+          admin_hidden_at: string | null
+          admin_hidden_by: string | null
+          admin_hidden_reason: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          title: string
+          description: string
+          price?: number | null
+          category: string
+          images?: string[]
+          status?: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views?: number
+          created_at?: string
+          updated_at?: string
+          type?: 'selling' | 'buying'
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          title?: string
+          description?: string
+          price?: number | null
+          category?: string
+          images?: string[]
+          status?: 'published' | 'hidden' | 'deleted' | 'unpublished'
+          views?: number
+          created_at?: string
+          updated_at?: string
+          type?: 'selling' | 'buying'
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Relationships: []
+      }
+      service_posts: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          category: string
+          location: string
+          description: string
+          contact_name: string | null
+          phone: string | null
+          wechat: string | null
+          price_note: string | null
+          images: string[] | null
+          status: 'active' | 'published' | 'hidden' | 'deleted'
+          is_active: boolean
+          created_at: string | null
+          updated_at: string | null
+          is_pinned: boolean
+          pinned_until: string | null
+          pinned_order: number
+          admin_hidden: boolean
+          admin_hidden_at: string | null
+          admin_hidden_by: string | null
+          admin_hidden_reason: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          category: string
+          location: string
+          description: string
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          price_note?: string | null
+          images?: string[] | null
+          status?: 'active' | 'published' | 'hidden' | 'deleted'
+          is_active?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          category?: string
+          location?: string
+          description?: string
+          contact_name?: string | null
+          phone?: string | null
+          wechat?: string | null
+          price_note?: string | null
+          images?: string[] | null
+          status?: 'active' | 'published' | 'hidden' | 'deleted'
+          is_active?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+          is_pinned?: boolean
+          pinned_until?: string | null
+          pinned_order?: number
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_by?: string | null
+          admin_hidden_reason?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           id: string

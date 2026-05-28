@@ -47,12 +47,13 @@ export async function PATCH(
     return NextResponse.json({ error: '无效请求体' }, { status: 400 })
   }
 
-  const { status, is_active, is_pinned, pinned_order, pinned_until } = body as {
+  const { status, is_active, is_pinned, pinned_order, pinned_until, admin_hidden_reason } = body as {
     status?: string
     is_active?: boolean
     is_pinned?: boolean
     pinned_order?: number
     pinned_until?: string | null
+    admin_hidden_reason?: string | null
   }
 
   const VALID_STATUSES = ['active', 'hidden', 'deleted']
@@ -78,14 +79,34 @@ export async function PATCH(
     return NextResponse.json({ error: 'pinned_until 必须是合法时间或空值' }, { status: 400 })
   }
 
+  const now = new Date().toISOString()
   const updates: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
+    updated_at: now,
   }
   if (status !== undefined) updates.status = status
   if (is_active !== undefined) updates.is_active = is_active
   if (is_pinned !== undefined) updates.is_pinned = is_pinned
   if (normalizedPinnedOrder !== undefined) updates.pinned_order = normalizedPinnedOrder
   if (normalizedPinnedUntil !== undefined) updates.pinned_until = normalizedPinnedUntil
+
+  if (status === 'hidden') {
+    updates.is_active = false
+    updates.admin_hidden = true
+    updates.admin_hidden_at = now
+    updates.admin_hidden_by = 'admin'
+    updates.admin_hidden_reason =
+      typeof admin_hidden_reason === 'string' && admin_hidden_reason.trim()
+        ? admin_hidden_reason.trim()
+        : null
+  }
+
+  if (status === 'active') {
+    updates.is_active = true
+    updates.admin_hidden = false
+    updates.admin_hidden_at = null
+    updates.admin_hidden_by = null
+    updates.admin_hidden_reason = null
+  }
 
   const supabase = getServiceClient()
   const { data, error } = await supabase

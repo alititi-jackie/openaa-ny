@@ -132,12 +132,13 @@ export async function PATCH(
     return NextResponse.json({ error: '无效请求体' }, { status: 400 })
   }
 
-  const { module, status, is_pinned, pinned_order, pinned_until } = body as {
+  const { module, status, is_pinned, pinned_order, pinned_until, admin_hidden_reason } = body as {
     module?: PostModule
     status?: string
     is_pinned?: boolean
     pinned_order?: number
     pinned_until?: string | null
+    admin_hidden_reason?: string | null
   }
 
   if (!module || !Object.keys(TABLE_MAP).includes(module)) {
@@ -223,11 +224,31 @@ export async function PATCH(
     }
   }
 
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  const now = new Date().toISOString()
+  const updates: Record<string, unknown> = { updated_at: now }
   if (dbStatus !== undefined) updates.status = dbStatus
   if (is_pinned !== undefined) updates.is_pinned = is_pinned
   if (normalizedPinnedOrder !== undefined) updates.pinned_order = normalizedPinnedOrder
   if (normalizedPinnedUntil !== undefined) updates.pinned_until = normalizedPinnedUntil
+
+  if (status === 'hidden') {
+    updates.admin_hidden = true
+    updates.admin_hidden_at = now
+    updates.admin_hidden_by = 'admin'
+    updates.admin_hidden_reason =
+      typeof admin_hidden_reason === 'string' && admin_hidden_reason.trim()
+        ? admin_hidden_reason.trim()
+        : null
+    if (isServicePost) updates.is_active = false
+  }
+
+  if (status === 'published') {
+    updates.admin_hidden = false
+    updates.admin_hidden_at = null
+    updates.admin_hidden_by = null
+    updates.admin_hidden_reason = null
+    if (isServicePost) updates.is_active = true
+  }
 
   // When changing to a non-published status, automatically clear all pinned fields.
   if (status !== undefined && status !== 'published') {
