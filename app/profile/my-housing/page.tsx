@@ -37,6 +37,10 @@ function displayPrice(p: number): string | null {
   return `$${price}`
 }
 
+function isAdminHidden(post: HousingPost) {
+  return post.status === 'hidden'
+}
+
 export default function MyHousingPage() {
   const router = useRouter()
   const [posts, setPosts] = useState<HousingPost[]>([])
@@ -147,6 +151,11 @@ export default function MyHousingPage() {
                           {p.room_type}
                         </span>
                       ) : null}
+                      {isAdminHidden(p) ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                          已被管理员下架
+                        </span>
+                      ) : null}
                     </div>
 
                     <div className="mt-2 text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
@@ -156,6 +165,12 @@ export default function MyHousingPage() {
                     </div>
                   </div>
                 </div>
+
+                {isAdminHidden(p) ? (
+                  <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    该内容已被管理员下架，暂时不会在公开页面展示。你可以修改后重新提交，或删除该内容。
+                  </div>
+                ) : null}
 
                 <div className="mt-4 flex items-center gap-2">
                   <Link
