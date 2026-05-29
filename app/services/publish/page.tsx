@@ -8,7 +8,7 @@ import { assertUserCanCreateContent, BANNED_ACCOUNT_MESSAGE } from '@/lib/accoun
 import { checkDailyPostLimit } from '@/lib/checkDailyPostLimit'
 import { DEFAULT_LOCATION, LOCATION_OPTIONS } from '@/lib/locationOptions'
 import { compressImageFile, getCompressImageErrorMessage } from '@/lib/compressImage'
-import { validateContactFields } from '@/lib/contactValidation'
+import { validateContactFields, CONTACT_MISSING_MESSAGE } from '@/lib/contactValidation'
 
 type PreviewImage =
   | { kind: 'remote'; url: string }
@@ -281,14 +281,15 @@ function ServicesPublishClient() {
   }
 
   const isDailyLimitError = error.includes('今天发布的信息已达到平台限制')
+  const isContactMissingError = error === CONTACT_MISSING_MESSAGE
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">发布服务</h1>
 
-      {error && <div className="bg-red-50 text-red-600 rounded-lg p-3 text-sm mb-4">{error}</div>}
+      {error && !isContactMissingError && <div className="bg-red-50 text-red-600 rounded-lg p-3 text-sm mb-4">{error}</div>}
 
-      {!error ? (
+      {(!error || isContactMissingError) ? (
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
         {/* Title */}
         <div>
@@ -485,6 +486,17 @@ function ServicesPublishClient() {
           {error && (
             <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">
               {error}
+              {error === CONTACT_MISSING_MESSAGE && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setError('')}
+                    className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+                  >
+                    返回修改
+                  </button>
+                </div>
+              )}
             </div>
           )}
           {isDailyLimitError && (
