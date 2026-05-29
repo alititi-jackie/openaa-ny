@@ -18,3 +18,18 @@ export async function PATCH(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(request: NextRequest) {
+  const auth = await authenticateUserRequest(request)
+  if ('errorResponse' in auth) return auth.errorResponse
+
+  const { data, error } = await auth.supabase
+    .from('notifications')
+    .delete()
+    .eq('user_id', auth.user.id)
+    .not('read_at', 'is', null)
+    .select('id')
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  return NextResponse.json({ success: true, deleted_count: data?.length ?? 0 })
+}
