@@ -43,6 +43,8 @@ export default function ProfileNotificationsPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [readingId, setReadingId] = useState<string | null>(null)
   const [markingAll, setMarkingAll] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletingReadAll, setDeletingReadAll] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -84,6 +86,7 @@ export default function ProfileNotificationsPage() {
   }, [])
 
   const unreadCount = useMemo(() => items.filter((item) => !item.read_at).length, [items])
+  const readCount = useMemo(() => items.filter((item) => item.read_at).length, [items])
 
   const handleMarkRead = async (item: UserNotification) => {
     if (!accessToken || item.read_at || readingId) return
@@ -131,20 +134,72 @@ export default function ProfileNotificationsPage() {
     }
   }
 
+  const handleDeleteRead = async (item: UserNotification) => {
+    if (!accessToken || !item.read_at || deletingId) return
+    setDeletingId(item.id)
+    setErrorMessage('')
+    try {
+      const res = await fetch(`/api/user/notifications/${item.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) throw new Error('delete read notification failed')
+      setItems((current) => current.filter((notification) => notification.id !== item.id))
+    } catch {
+      setErrorMessage('删除通知失败，请稍后再试')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleDeleteReadAll = async () => {
+    if (!accessToken || deletingReadAll) return
+    if (readCount === 0) {
+      setErrorMessage('没有已读通知可删除，请先阅读或标记已读后再删除。')
+      return
+    }
+    if (!window.confirm('确定删除所有已读通知吗？')) return
+
+    setDeletingReadAll(true)
+    setErrorMessage('')
+    try {
+      const res = await fetch('/api/user/notifications/read-all', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (!res.ok) throw new Error('delete read notifications failed')
+      setItems((current) => current.filter((notification) => !notification.read_at))
+    } catch {
+      setErrorMessage('删除已读通知失败，请稍后再试')
+    } finally {
+      setDeletingReadAll(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-50 pb-24">
       <div className="mx-auto max-w-2xl px-4 py-6">
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <DetailBackButton fallbackHref="/profile" label="← 返回我的" inToolbar forceHref />
-          {accessToken && unreadCount > 0 ? (
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              disabled={markingAll}
-              className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-sm font-medium text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {markingAll ? '处理中' : '全部已读'}
-            </button>
+          {accessToken ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                disabled={unreadCount === 0 || markingAll}
+                className="rounded-xl border border-blue-100 bg-white px-3 py-2 text-sm font-medium text-blue-700 shadow-sm transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {markingAll ? '处理中' : '全部已读'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteReadAll}
+                disabled={deletingReadAll}
+                className="rounded-xl border border-red-100 bg-white px-3 py-2 text-sm font-medium text-red-600 shadow-sm transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deletingReadAll ? '处理中' : '删除已读'}
+              </button>
+            </div>
           ) : null}
         </div>
 
@@ -219,7 +274,16 @@ export default function ProfileNotificationsPage() {
                           >
                             {readingId === item.id ? '处理中' : '标记已读'}
                           </button>
-                        ) : null}
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteRead(item)}
+                            disabled={deletingId === item.id}
+                            className="rounded-lg border border-red-100 bg-white px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {deletingId === item.id ? '处理中' : '删除'}
+                          </button>
+                        )}
                       </div>
                     </article>
                   )
