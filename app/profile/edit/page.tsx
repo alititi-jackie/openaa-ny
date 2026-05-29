@@ -135,7 +135,7 @@ export default function EditProfilePage() {
       return
     }
 
-    const { data: updated, error: updateError } = await supabase
+    const { error: updateError } = await supabase
       .from('users')
       .update({
         username,
@@ -147,16 +147,28 @@ export default function EditProfilePage() {
       .select('username, bio, phone')
       .single()
 
-    if (updateError || !updated) {
+    if (updateError) {
       setError('保存失败：未找到记录或无权限')
       setSaving(false)
       return
     }
 
+    const { data: latestProfile, error: reloadError } = await supabase
+      .from('users')
+      .select('username, bio, phone')
+      .eq('id', user.id)
+      .single()
+
+    if (reloadError || !latestProfile) {
+      setError('资料已提交，但读取最新资料失败，请刷新后再查看。')
+      setSaving(false)
+      return
+    }
+
     setForm({
-      username: updated.username || '',
-      bio: updated.bio || '',
-      phone: updated.phone || '',
+      username: latestProfile.username || '',
+      bio: latestProfile.bio || '',
+      phone: latestProfile.phone || '',
     })
 
     setSaving(false)

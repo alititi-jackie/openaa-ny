@@ -1,17 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { validateContactFields } from '@/lib/contactValidation'
 import { isPublicOwnerVisible } from '@/lib/publicVisibility'
 import {
   assertUserCanDeleteOwnContent,
   assertUserCanEditOwnContent,
   assertUserCanHideContent,
+  assertUserCanRestoreContent,
 } from '@/lib/accountStatus'
 
 export const dynamic = 'force-dynamic'
 
-function hasPublicStateMutation(body: unknown): boolean {
-  return Boolean(body && typeof body === 'object' && ('status' in body || 'is_active' in body))
+const ALLOWED_UPDATE_FIELDS = new Set([
+  'type',
+  'title',
+  'description',
+  'price',
+  'category',
+  'contact_name',
+  'phone',
+  'wechat',
+  'images',
+  'status',
+])
+
+type CurrentPost = {
+  status: string | null
+  admin_hidden: boolean | null
+  phone: string | null
+  wechat: string | null
+}
+
+function toObject(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  return value as Record<string, unknown>
+}
+
+function getDisallowedUpdateFields(body: Record<string, unknown>) {
+  return Object.keys(body).filter((key) => !ALLOWED_UPDATE_FIELDS.has(key))
+}
+
+async function assertStatusPermission(
+  supabase: SupabaseClient,
+  userId: string,
+  currentPost: CurrentPost,
+  nextStatus: unknown
+): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  if (nextStatus !== 'hidden' && nextStatus !== 'published') {
+    return { ok: false, response: NextResponse.json({ error: 'status 只能更新为 hidden 或 published' }, { status: 400 }) }
+  }
+
+  if (currentPost.status === 'deleted') {
+    return { ok: false, response: NextResponse.json({ error: '已删除内容不能恢复或编辑' }, { status: 403 }) }
+  }
+
+  if (nextStatus === 'hidden') {
+    const permission = await assertUserCanHideContent(supabase, userId)
+    if (!permission.allowed) {
+      return { ok: false, response: NextResponse.json({ error: permission.message }, { status: 403 }) }
+    }
+  }
+
+  if (nextStatus === 'published' && currentPost.status !== 'published') {
+    if (currentPost.admin_hidden === true) {
+      return { ok: false, response: NextResponse.json({ error: '该内容已被管理员下架，无法自行恢复。' }, { status: 403 }) }
+    }
+
+    if (currentPost.status !== 'hidden') {
+      return { ok: false, response: NextResponse.json({ error: '不能直接恢复公开该内容' }, { status: 403 }) }
+    }
+
+    const permission = await assertUserCanRestoreContent(supabase, userId)
+    if (!permission.allowed) {
+      return { ok: false, response: NextResponse.json({ error: permission.message }, { status: 403 }) }
+    }
+  }
+
+  return { ok: true }
 }
 
 export async function GET(
@@ -55,25 +121,43 @@ export async function PUT(
   const { data: { user } } = await supabase.auth.getUser(token)
   if (!user) return NextResponse.json({ error: '未授权' }, { status: 401 })
 
-  const body = await request.json()
+  const body = toObject(await request.json())
+  if (!body) return NextResponse.json({ error: '无效请求体' }, { status: 400 })
+
+  const disallowedFields = getDisallowedUpdateFields(body)
+  if (disallowedFields.length > 0) {
+    return NextResponse.json({ error: `不允许更新字段：${disallowedFields.join(', ')}` }, { status: 400 })
+  }
+
   const editPermission = await assertUserCanEditOwnContent(supabase, user.id)
   if (!editPermission.allowed) {
     return NextResponse.json({ error: editPermission.message }, { status: 403 })
   }
 
-  if (hasPublicStateMutation(body)) {
-    const statePermission = await assertUserCanHideContent(supabase, user.id)
-    if (!statePermission.allowed) {
-      return NextResponse.json({ error: statePermission.message }, { status: 403 })
-    }
+  const { data: currentPost, error: currentPostError } = await supabase
+    .from('secondhand_items')
+    .select('status, admin_hidden, phone, wechat')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (currentPostError) return NextResponse.json({ error: currentPostError.message }, { status: 400 })
+  if (!currentPost) return NextResponse.json({ error: '记录不存在或无权限' }, { status: 404 })
+
+  if ('status' in body) {
+    const result = await assertStatusPermission(supabase, user.id, currentPost as CurrentPost, body.status)
+    if (!result.ok) return result.response
   }
 
   if ('phone' in body || 'wechat' in body) {
-    const contactCheck = validateContactFields(body?.phone ?? '', body?.wechat ?? '')
+    const nextPhone = 'phone' in body ? String(body.phone ?? '') : ((currentPost as CurrentPost).phone ?? '')
+    const nextWechat = 'wechat' in body ? String(body.wechat ?? '') : ((currentPost as CurrentPost).wechat ?? '')
+    const contactCheck = validateContactFields(nextPhone, nextWechat)
     if (!contactCheck.ok) {
       return NextResponse.json({ error: contactCheck.message }, { status: 422 })
     }
   }
+
   const { data, error } = await supabase
     .from('secondhand_items')
     .update({ ...body, updated_at: new Date().toISOString() })
@@ -109,12 +193,15 @@ export async function DELETE(
     return NextResponse.json({ error: permission.message }, { status: 403 })
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('secondhand_items')
-    .delete()
+    .update({ status: 'deleted', updated_at: new Date().toISOString() })
     .eq('id', id)
     .eq('user_id', user.id)
+    .select('id')
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  if (!data) return NextResponse.json({ error: '记录不存在或无权限' }, { status: 404 })
   return NextResponse.json({ message: '商品已删除' })
 }
