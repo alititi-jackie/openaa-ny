@@ -15,18 +15,6 @@ const TABS: Array<{ key: HousingPostType; label: string }> = [
   { key: 'seeking', label: '求租求购' },
 ]
 
-function formatDate(s: string) {
-  try {
-    return new Date(s).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  } catch {
-    return s
-  }
-}
-
 function typeLabel(t?: string) {
   return t === 'seeking' ? '求租' : '出租'
 }
@@ -281,7 +269,6 @@ export default function HousingPage() {
                           ) : null}
                           {priceStr ? <span>💰 {priceStr}</span> : null}
                           {p.location ? <span>📍 {p.location}</span> : null}
-                          <span>🕒 {formatDate(p.created_at)}</span>
                         </div>
 
                         {p.description ? (
