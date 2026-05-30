@@ -80,6 +80,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.64,
     },
     {
+      url: getSiteUrl('/dmv/ny/quiz'),
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.64,
+    },
+    {
       url: getSiteUrl('/dmv/ny/sign-test'),
       lastModified: now,
       changeFrequency: 'weekly',
@@ -95,7 +101,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = getServiceSupabaseServerClient()
   if (!supabase) {
-    console.error('Failed to load dynamic sitemap entries: Supabase server client is not configured')
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(
+        'Skipping dynamic sitemap entries: Supabase server client is not configured. Static sitemap entries will still be returned.'
+      )
+    }
     return staticEntries
   }
 
