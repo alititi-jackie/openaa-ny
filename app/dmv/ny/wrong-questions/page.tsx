@@ -356,18 +356,18 @@ export default function WrongQuestionsPage() {
             </div>
 
             {/* Filters */}
-            <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+            <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
               <button
                 type="button"
                 onClick={() => setOnlySign(false)}
-                className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${!onlySign ? 'bg-blue-600 text-white' : 'border border-zinc-200 bg-white text-zinc-600'}`}
+                className={`inline-flex min-h-10 flex-1 items-center justify-center rounded-xl py-2 text-sm font-medium leading-none transition-colors ${!onlySign ? 'bg-blue-600 text-white' : 'border border-zinc-200 bg-white text-zinc-600'}`}
               >
                 全部错题 ({wrongQuestions.length})
               </button>
               <button
                 type="button"
                 onClick={() => setOnlySign(true)}
-                className={`flex-1 rounded-xl py-2 text-sm font-medium transition-colors ${onlySign ? 'bg-blue-600 text-white' : 'border border-zinc-200 bg-white text-zinc-600'}`}
+                className={`inline-flex min-h-10 flex-1 items-center justify-center rounded-xl py-2 text-sm font-medium leading-none transition-colors ${onlySign ? 'bg-blue-600 text-white' : 'border border-zinc-200 bg-white text-zinc-600'}`}
               >
                 标志错题 ({wrongQuestions.filter((q) => q.category === '交通标志').length})
               </button>

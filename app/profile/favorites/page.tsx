@@ -145,13 +145,13 @@ export default function ProfileFavoritesPage() {
           </div>
         ) : (
           <>
-            <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+            <div className="mb-4 flex gap-2 overflow-x-auto py-1">
               {FILTERS.map((item) => (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => setFilter(item.value)}
-                  className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition ${
+                  className={`inline-flex min-h-8 shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium leading-none ring-1 transition ${
                     filter === item.value
                       ? 'bg-blue-600 text-white ring-blue-600'
                       : 'bg-white text-zinc-600 ring-zinc-200 hover:bg-zinc-50'

@@ -154,7 +154,7 @@ export default function JobsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+        <div className="mb-6 overflow-x-auto overflow-y-hidden py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
           <div className="inline-flex flex-nowrap rounded-xl bg-gray-100 p-1">
             {TABS.map((t) => {
               const isActive = t.key === activeTab
@@ -165,8 +165,8 @@ export default function JobsPage() {
                   onClick={() => setActiveTab(t.key)}
                   className={
                     isActive
-                      ? 'px-4 py-2 text-sm font-semibold rounded-lg bg-white text-gray-900 shadow-sm'
-                      : 'px-4 py-2 text-sm font-semibold rounded-lg text-gray-600 hover:text-gray-900'
+                      ? 'inline-flex min-h-9 items-center rounded-lg bg-white px-4 py-2 text-sm font-semibold leading-none text-gray-900 shadow-sm'
+                      : 'inline-flex min-h-9 items-center rounded-lg px-4 py-2 text-sm font-semibold leading-none text-gray-600 hover:text-gray-900'
                   }
                 >
                   {t.label}

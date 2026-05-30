@@ -878,7 +878,7 @@ function AdsAdminContent() {
         {/* Filters */}
         <div className="space-y-2">
           {/* Position filters */}
-          <div className="-mx-1 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+          <div className="-mx-1 overflow-x-auto overflow-y-hidden py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
             <div className="flex flex-nowrap gap-2 px-1 whitespace-nowrap">
               {POSITION_FILTERS.map((item) => {
                 const active = activePosition === item.key
@@ -888,7 +888,7 @@ function AdsAdminContent() {
                     type="button"
                     onClick={() => setActivePosition(item.key)}
                     className={
-                      `px-3 py-1 rounded-full text-xs font-medium border ` +
+                      `inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-xs font-medium leading-none ` +
                       (active
                         ? 'bg-blue-50 text-blue-700 border-blue-200'
                         : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200')
@@ -902,7 +902,7 @@ function AdsAdminContent() {
           </div>
 
           {/* Status filters */}
-          <div className="-mx-1 overflow-x-auto overflow-y-hidden [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+          <div className="-mx-1 overflow-x-auto overflow-y-hidden py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
             <div className="flex flex-nowrap gap-2 px-1 whitespace-nowrap">
               {STATUS_FILTERS.map((item) => {
                 const active = activeStatus === item.key
@@ -912,7 +912,7 @@ function AdsAdminContent() {
                     type="button"
                     onClick={() => setActiveStatus(item.key)}
                     className={
-                      `px-3 py-1 rounded-full text-xs font-medium border ` +
+                      `inline-flex min-h-7 items-center rounded-full border px-3 py-1 text-xs font-medium leading-none ` +
                       (active
                         ? 'bg-blue-50 text-blue-700 border-blue-200'
                         : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200')

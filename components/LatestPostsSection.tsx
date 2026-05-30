@@ -171,12 +171,12 @@ function renderLatestPostsSection({
         </div>
 
         {/* Quick nav links (not tabs) */}
-        <div className="mt-2 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden no-scrollbar [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+        <div className="mt-2 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden py-1 no-scrollbar [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
           {quickLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="flex-shrink-0 rounded-full bg-zinc-100 px-3 py-1.5 text-[12px] font-semibold text-zinc-700 hover:bg-blue-50 hover:text-blue-700 active:scale-[0.98] transition"
+              className="inline-flex min-h-8 flex-shrink-0 items-center rounded-full bg-zinc-100 px-3 py-1.5 text-[12px] font-semibold leading-none text-zinc-700 transition hover:bg-blue-50 hover:text-blue-700 active:scale-[0.98]"
             >
               {l.label}
             </Link>

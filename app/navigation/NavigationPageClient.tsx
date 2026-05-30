@@ -149,7 +149,7 @@ function CategoryTabs({
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const tabClassName = (active: boolean) =>
-    `flex-shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+    `inline-flex min-h-8 flex-shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-medium leading-none transition ${
       active ? 'border-[#1976d2] bg-[#1976d2] text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
     }`
 
@@ -172,7 +172,7 @@ function CategoryTabs({
 
           <div
             ref={scrollRef}
-            className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             role="region"
             aria-label="分类筛选"
           >
