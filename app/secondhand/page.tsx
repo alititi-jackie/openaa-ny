@@ -129,13 +129,13 @@ export default function SecondhandPage() {
     <div className="min-h-screen bg-zinc-50">
       <AppTopSection bannerPosition="secondhand" />
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 py-6 pb-24">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <DetailBackButton fallbackHref="/" label="← 返回首页" inToolbar forceHref />
           <ShareButton path="/secondhand" title="OpenAA 二手交易频道" text="纽约二手交易、求购信息与本地闲置发布。" />
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
           <Link
             href={`/secondhand/publish?type=${activeTab}`}
@@ -168,18 +168,19 @@ export default function SecondhandPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={activeTab === 'selling' ? '搜索商品...' : '搜索求购...'}
-            className="flex-1 min-w-[12rem] border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
+            className="w-full flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:min-w-[12rem]"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:w-auto"
           >
             <option value="">不限</option>
             {SECONDHAND_CATEGORIES.map((cat) => (
@@ -188,20 +189,26 @@ export default function SecondhandPage() {
               </option>
             ))}
           </select>
-          <RegionFilter value={location} onChange={setLocation} />
+          <RegionFilter
+            value={location}
+            onChange={setLocation}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:w-auto"
+          />
+          </div>
         </div>
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">加载中...</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
             <div className="text-4xl mb-3">🛍️</div>
-            <p>{activeTab === 'selling' ? '暂无符合条件的二手信息' : '暂无符合条件的求购信息'}</p>
+            <p className="font-medium text-gray-900">暂无相关信息</p>
+            <p className="mt-2 text-sm text-gray-500">可以换个关键词或地区试试，也可以发布第一条信息。</p>
             <Link
-              href={`/secondhand/publish?type=${activeTab}`}
-              className="text-[#1976d2] mt-2 inline-block hover:underline"
+              href="/secondhand/publish"
+              className="mt-4 inline-flex bg-[#1976d2] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#1565c0] transition"
             >
-              {activeTab === 'selling' ? '成为第一个发布者' : '发布第一条求购'}
+              发布二手
             </Link>
           </div>
         ) : (

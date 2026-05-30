@@ -26,14 +26,14 @@ export default function JobCard({ job }: Props) {
   return (
     <Link href={`/jobs/${job.id}`}>
       <div className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100">
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-lg">{job.title}</h3>
+        <div className="flex justify-between items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">{job.title}</h3>
             {companyName && companyName !== '匿名发布' ? (
-              <p className="text-gray-600 mt-1">{companyName}</p>
+              <p className="text-gray-600 mt-1 line-clamp-1 break-all">{companyName}</p>
             ) : null}
           </div>
-          <span className="text-sm bg-blue-50 text-[#1976d2] px-2 py-1 rounded font-medium ml-2 shrink-0">
+          <span className="max-w-[9rem] truncate text-sm bg-blue-50 text-[#1976d2] px-2 py-1 rounded font-medium shrink-0">
             {job.job_type}
           </span>
         </div>
