@@ -406,7 +406,7 @@ export default function AdminHomeSectionsPage() {
       />
 
       {/* Category navigation bar */}
-      <nav className="mb-5 -mx-1 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden px-1 pb-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
+      <nav className="mb-5 -mx-1 flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden px-1 py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain]">
         {(
           [
             { key: 'main', label: '主板块', sectionId: 'main-section' },
@@ -418,7 +418,7 @@ export default function AdminHomeSectionsPage() {
             key={key}
             type="button"
             onClick={() => handleNavClick(key, sectionId)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`inline-flex min-h-8 shrink-0 items-center rounded-full px-4 py-1.5 text-sm font-medium leading-none transition-colors ${
               activeNav === key
                 ? 'bg-blue-100 text-blue-700'
                 : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'

@@ -640,7 +640,7 @@ function AdminCategoryTabs({
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const tabCls = (active: boolean) =>
-    `flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition ${
+    `inline-flex min-h-8 flex-shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-medium leading-none transition ${
       active
         ? 'bg-[#1976d2] text-white border-[#1976d2]'
         : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
@@ -669,7 +669,7 @@ function AdminCategoryTabs({
 
           <div
             ref={scrollRef}
-            className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            className="min-w-0 flex-1 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             role="region"
             aria-label="网址分类导航"
           >

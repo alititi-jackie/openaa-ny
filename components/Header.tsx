@@ -242,7 +242,7 @@ export default function Header() {
 
                 <div
                   ref={scrollRef}
-                  className="flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap py-1 [touch-action:pan-x] [overscroll-behavior-x:contain] [overscroll-behavior-y:contain] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {quickNavItems.map((item) => (
                     <Link
@@ -250,7 +250,7 @@ export default function Header() {
                       href={item.url}
                       target={item.open_mode === 'new' ? '_blank' : undefined}
                       rel={item.open_mode === 'new' ? 'noopener noreferrer' : undefined}
-                      className="shrink-0 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-100 active:bg-blue-100"
+                      className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold leading-none text-blue-700 transition-colors hover:bg-blue-100 active:bg-blue-100"
                       onClick={closeQuickNav}
                     >
                       {item.title}
