@@ -377,6 +377,7 @@ export default function PracticePage() {
         activeCategory={category}
         onChange={setCategory}
         getLabel={getCategoryLabel}
+        className="static top-auto z-auto"
       />
 
       {/* Question List */}
