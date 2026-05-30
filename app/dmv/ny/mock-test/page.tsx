@@ -328,7 +328,7 @@ export default function MockTestPage() {
             <div className="mt-4 space-y-2.5">
               {q.options.map((opt, i) => {
                 let cls =
-                  'w-full rounded-2xl border px-4 py-4 text-left text-sm font-medium transition-colors active:scale-[0.98]'
+                  'w-full rounded-2xl border px-4 py-4 text-left text-sm font-medium break-words whitespace-normal transition-colors active:scale-[0.98]'
                 if (answered && i === selectedAnswer) {
                   cls += ' border-blue-300 bg-blue-50 text-blue-800'
                 } else {
@@ -524,11 +524,11 @@ export default function MockTestPage() {
                   key={q.id}
                   className={`rounded-xl border p-3 ${correct ? 'border-green-100 bg-green-50' : userAnswer === null ? 'border-zinc-100 bg-zinc-50' : 'border-red-100 bg-red-50'}`}
                 >
-                  <p className="text-xs font-semibold text-zinc-700">
+                  <p className="text-xs font-semibold text-zinc-700 break-words whitespace-normal">
                     {i + 1}. {q.question.length > 40 ? q.question.slice(0, 40) + '…' : q.question}
                   </p>
                   <p
-                    className={`mt-1 text-xs ${correct ? 'text-green-600' : userAnswer === null ? 'text-zinc-400' : 'text-red-600'}`}
+                    className={`mt-1 text-xs break-words whitespace-normal ${correct ? 'text-green-600' : userAnswer === null ? 'text-zinc-400' : 'text-red-600'}`}
                   >
                     {userAnswer === null
                       ? '未作答'
@@ -537,7 +537,7 @@ export default function MockTestPage() {
                         : `✗ 你选: ${q.options[userAnswer]?.slice(0, 20)}`}
                   </p>
                   {!correct && userAnswer !== null && (
-                    <p className="mt-0.5 text-xs text-green-700">正确: {q.answerText}</p>
+                    <p className="mt-0.5 text-xs text-green-700 break-words whitespace-normal">正确: {q.answerText}</p>
                   )}
                 </div>
               )
