@@ -62,7 +62,7 @@ export default function GlobalSearchOverlay({ isOpen, onClose }: GlobalSearchOve
       className="fixed inset-0 z-[100] overflow-x-hidden"
       style={{ height: '100dvh' }}
     >
-      <div className="mx-auto flex h-full w-full max-w-[560px] flex-col bg-white">
+      <div className="mx-auto flex h-full w-full max-w-[560px] flex-col bg-white md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px]">
         {/* Top bar: back button + title */}
         <div className="shrink-0 border-b border-zinc-100 bg-white pt-[env(safe-area-inset-top)]">
           <div className="flex h-14 items-center px-4">
@@ -91,7 +91,7 @@ export default function GlobalSearchOverlay({ isOpen, onClose }: GlobalSearchOve
       {/* Back to top — positioned inside the overlay panel */}
       {showBackToTop && (
         <div className="pointer-events-none absolute inset-x-0 z-10" style={{ bottom: BACK_TO_TOP_BOTTOM }}>
-          <div className="mx-auto flex w-full max-w-[560px] justify-end px-4">
+          <div className="mx-auto flex w-full max-w-[560px] justify-end px-4 md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px]">
             <button
               type="button"
               onClick={scrollToTop}
@@ -108,7 +108,7 @@ export default function GlobalSearchOverlay({ isOpen, onClose }: GlobalSearchOve
         type="button"
         onClick={onClose}
         aria-label="关闭"
-        className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[120] rounded-full border border-zinc-200 bg-white px-6 py-2 text-sm font-medium text-zinc-700 shadow-md active:bg-zinc-100"
+        className="fixed bottom-20 left-1/2 z-[120] -translate-x-1/2 rounded-full border border-zinc-200 bg-white px-6 py-2 text-sm font-medium text-zinc-700 shadow-md active:bg-zinc-100 md:left-auto md:right-[calc((100vw-760px)/2+16px)] md:translate-x-0 lg:right-[calc((100vw-960px)/2+16px)] xl:right-[calc((100vw-1040px)/2+16px)]"
       >
         关闭
       </button>
