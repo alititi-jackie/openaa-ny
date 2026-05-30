@@ -15,18 +15,6 @@ const TABS: Array<{ key: HousingPostType; label: string }> = [
   { key: 'seeking', label: '求租求购' },
 ]
 
-function formatDate(s: string) {
-  try {
-    return new Date(s).toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    })
-  } catch {
-    return s
-  }
-}
-
 function typeLabel(t?: string) {
   return t === 'seeking' ? '求租' : '出租'
 }
@@ -41,6 +29,12 @@ function displayPrice(p: number): string | null {
   const price = Number(p || 0)
   if (!Number.isFinite(price) || price <= 0) return null
   return `$${price}`
+}
+
+function normalizeRoomType(value: string | null | undefined): string | null {
+  const text = (value || '').trim()
+  if (!text || text === '-' || text === '—') return null
+  return text
 }
 
 function toSortableTime(value: string | null | undefined): number {
@@ -250,6 +244,7 @@ export default function HousingPage() {
             {filtered.map((p) => {
               const priceStr = displayPrice(p.price)
               const isPinned = isEffectivePinned(p, Date.now())
+              const roomType = normalizeRoomType(p.room_type)
               return (
                 <Link
                   key={p.id}
@@ -266,9 +261,9 @@ export default function HousingPage() {
                           <span className={`text-xs px-2 py-0.5 rounded-full ${typeBadgeClass(p.type)}`}>
                             {typeLabel(p.type)}
                           </span>
-                          {p.room_type ? (
+                          {roomType ? (
                             <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
-                              {p.room_type}
+                              {roomType}
                             </span>
                           ) : null}
                         </div>
@@ -281,7 +276,6 @@ export default function HousingPage() {
                           ) : null}
                           {priceStr ? <span>💰 {priceStr}</span> : null}
                           {p.location ? <span>📍 {p.location}</span> : null}
-                          <span>🕒 {formatDate(p.created_at)}</span>
                         </div>
 
                         {p.description ? (
