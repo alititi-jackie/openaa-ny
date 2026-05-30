@@ -44,7 +44,7 @@ export default function SecondhandCard({ item }: Props) {
 
   return (
     <Link href={`/secondhand/${item.id}`}>
-      <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer">
         <div className="relative h-48 bg-gray-100">
           {item.images && item.images.length > 0 ? (
             <Image src={item.images[0]} alt={item.title} fill className="object-cover" />
@@ -63,6 +63,9 @@ export default function SecondhandCard({ item }: Props) {
         <div className="p-3">
           {priceOrBudget ? <p className="font-semibold text-lg text-[#1976d2]">{priceOrBudget}</p> : null}
           <h3 className="text-gray-900 font-medium line-clamp-2 mt-1">{item.title}</h3>
+          {item.description ? (
+            <p className="mt-1 text-sm text-gray-600 line-clamp-2">{item.description}</p>
+          ) : null}
           <div className="flex items-center justify-between mt-2 gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
               {isPinned ? (

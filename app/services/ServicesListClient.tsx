@@ -60,13 +60,13 @@ function ServiceCard({ post }: { post: ServicePost }) {
   return (
     <Link
       href={`/services/${post.id}`}
-      className="block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition"
+      className="block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition"
     >
       {thumb ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={thumb} alt={post.title} className="w-full h-36 object-cover" />
       ) : (
-        <div className="w-full h-16 bg-zinc-50 flex items-center justify-center text-3xl select-none" aria-hidden="true">
+        <div className="w-full h-36 bg-zinc-50 flex items-center justify-center text-3xl select-none" aria-hidden="true">
           🛠️
         </div>
       )}
@@ -152,18 +152,18 @@ export default function ServicesListClient() {
   }, [posts])
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-zinc-50">
       <AppTopSection bannerPosition="services" />
 
-      <div className="px-4 pt-4">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <DetailBackButton fallbackHref="/" label="← 返回首页" inToolbar forceHref />
           <ShareButton path="/services" title="OpenAA 本地服务" text="纽约华人常用本地服务信息与商家入口。" />
         </div>
 
         {/* Header */}
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h1 className="text-xl font-black text-gray-900">本地服务</h1>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold text-gray-900">本地服务</h1>
           <Link
             href="/services/publish"
             className="bg-[#1976d2] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#1565c0] transition"
@@ -171,41 +171,50 @@ export default function ServicesListClient() {
             {'+ \u53d1\u5e03\u670d\u52a1'}
           </Link>
         </div>
-        <p className="pb-3 text-sm text-gray-500">
+        <p className="mb-4 text-sm text-gray-500">
           找纽约华人常用服务：装修维修、搬家保洁、汽车驾校、律师会计、电脑手机等。
         </p>
-      </div>
 
-      {/* Search */}
-      <div className="px-4 mb-3">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="搜索服务标题、介绍、分类..."
-          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
-        />
-      </div>
-
-      <HorizontalCategoryTabs
-        categories={SERVICE_CATEGORIES}
-        activeCategory={category}
-        onChange={setCategory}
-      />
-
-      {/* Location filter */}
-      <div className="px-4 mb-4">
-        <RegionFilter value={location} onChange={setLocation} />
-      </div>
+        <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索服务标题、介绍、分类..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
+            />
+            <HorizontalCategoryTabs
+              categories={SERVICE_CATEGORIES}
+              activeCategory={category}
+              onChange={setCategory}
+              className="static top-auto z-auto mb-0 border-b-0 bg-transparent backdrop-blur-0 supports-[backdrop-filter]:bg-transparent"
+            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <RegionFilter
+                value={location}
+                onChange={setLocation}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:w-auto"
+              />
+            </div>
+          </div>
+        </div>
 
       {/* List */}
-      <div className="px-4">
+      <div>
         {loading ? (
           <div className="flex justify-center py-16 text-gray-400">加载中...</div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center py-16 text-gray-400">
+          <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
             <div className="text-4xl mb-3">🔍</div>
-            <p className="text-sm">暂无符合条件的服务信息</p>
+            <p className="font-medium text-gray-900">暂无相关信息</p>
+            <p className="mt-2 text-sm text-gray-500">可以换个关键词或地区试试，也可以发布第一条信息。</p>
+            <Link
+              href="/services/publish"
+              className="mt-4 inline-flex bg-[#1976d2] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#1565c0] transition"
+            >
+              发布服务
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -216,7 +225,6 @@ export default function ServicesListClient() {
         )}
       </div>
 
-      <div className="px-4">
         <ChannelSeoSection
           className="mt-8"
           title="纽约华人服务频道介绍"

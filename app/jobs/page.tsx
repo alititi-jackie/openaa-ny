@@ -137,13 +137,13 @@ export default function JobsPage() {
 
       <AppTopSection bannerPosition="jobs" />
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
+        <div className="mb-6 flex items-center justify-between gap-3">
           <DetailBackButton fallbackHref="/" label="← 返回首页" inToolbar forceHref />
           <ShareButton path="/jobs" title="OpenAA 招聘频道" text="纽约招聘、求职、兼职全职与行业岗位信息。" />
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
           <Link
             href={`/jobs/publish?type=${activeTab}`}
@@ -176,18 +176,19 @@ export default function JobsPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="搜索职位、公司、地点..."
-            className="flex-1 min-w-48 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
+            className="w-full flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:min-w-48"
           />
           <select
             value={jobType}
             onChange={(e) => setJobType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:w-auto"
           >
             <option value="">工作类型</option>
             {JOB_TYPES.map((type) => (
@@ -199,7 +200,7 @@ export default function JobsPage() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:w-auto"
           >
             <option value="">职位分类</option>
             {JOB_CATEGORIES.map((cat) => (
@@ -208,20 +209,26 @@ export default function JobsPage() {
               </option>
             ))}
           </select>
-          <RegionFilter value={location} onChange={setLocation} />
+          <RegionFilter
+            value={location}
+            onChange={setLocation}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-transparent sm:w-auto"
+          />
+          </div>
         </div>
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">加载中...</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm">
             <div className="text-4xl mb-3">💼</div>
-            <p>暂无符合条件的招聘信息</p>
+            <p className="font-medium text-gray-900">暂无相关信息</p>
+            <p className="mt-2 text-sm text-gray-500">可以换个关键词或地区试试，也可以发布第一条信息。</p>
             <Link
-              href={`/jobs/publish?type=${activeTab}`}
-              className="text-[#1976d2] mt-2 inline-block hover:underline"
+              href="/jobs/publish"
+              className="mt-4 inline-flex bg-[#1976d2] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#1565c0] transition"
             >
-              发布第一条
+              发布招聘
             </Link>
           </div>
         ) : (
