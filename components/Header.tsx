@@ -159,7 +159,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[560px] z-50 bg-white/96 backdrop-blur-md border-b border-zinc-100/80">
+      <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[560px] md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px] z-50 bg-white/96 backdrop-blur-md border-b border-zinc-100/80">
       <div className="relative">
         <div className="flex items-center justify-between h-14 px-4">
           {/* Left: location picker */}

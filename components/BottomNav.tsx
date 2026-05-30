@@ -30,7 +30,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[560px] z-50 bg-white border-t border-zinc-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[560px] md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px] z-50 bg-white border-t border-zinc-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
       <div className="grid grid-cols-5 h-16 items-end pb-2">
         {items.map(({ href, label, Icon, exact }) => {
           const active = isActive(href, exact)

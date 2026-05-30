@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="bg-zinc-200 antialiased">
-        <div className="mx-auto max-w-[560px] min-h-screen bg-white relative shadow-[0_0_80px_rgba(0,0,0,0.10)]">
+        <div className="mx-auto max-w-[560px] md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px] min-h-screen bg-white relative shadow-[0_0_80px_rgba(0,0,0,0.10)]">
           <Header />
           <main className="pt-14 pb-20">{children}</main>
           <BottomNav />
