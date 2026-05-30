@@ -168,7 +168,7 @@ export default function AdminHomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 md:py-8">
+    <div className="mx-auto max-w-6xl px-4 py-6 md:py-8">
       <div className="rounded-2xl border border-zinc-200 bg-white p-4 md:p-6">
         <Link
           href="/"
@@ -225,7 +225,7 @@ export default function AdminHomePage() {
         </div>
       ) : (
         <>
-          <div className="mt-4 grid gap-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {ADMIN_ENTRIES.map((entry) => {
               return (
                 <div key={entry.id} className="rounded-2xl border border-zinc-200 bg-white p-4">

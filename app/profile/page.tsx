@@ -118,7 +118,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-zinc-100">
-      <div className="mx-auto max-w-[560px] px-4 pt-6 pb-6 space-y-4">
+      <div className="mx-auto w-full max-w-[560px] px-4 pt-6 pb-6 space-y-4 md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px]">
         <div className="px-1">
           <h1 className="text-[18px] font-black text-zinc-900 tracking-tight">OpenAA 用户中心</h1>
           <p className="mt-1 text-[12px] text-zinc-500">管理我的信息与发布入口</p>
@@ -272,7 +272,7 @@ export default function ProfilePage() {
 
           {publishOpen && (
             <div className="px-4 pb-4 pt-2 border-b border-zinc-100">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <Link
                   href="/jobs/publish"
                   className="text-left rounded-2xl p-3 bg-zinc-50 ring-1 ring-zinc-100 hover:bg-white hover:ring-zinc-200 transition"
@@ -404,7 +404,7 @@ export default function ProfilePage() {
       </div>
 
       {/* 平台公告 */}
-      <div className="mx-auto max-w-[560px] px-4 pb-24 space-y-3">
+      <div className="mx-auto w-full max-w-[560px] px-4 pb-24 space-y-3 md:max-w-[760px] lg:max-w-[960px] xl:max-w-[1040px]">
         <Link
           href={`/news?category=${encodeURIComponent('平台公告')}`}
           aria-label="查看平台公告和最新规则更新"
