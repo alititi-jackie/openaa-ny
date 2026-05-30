@@ -24,8 +24,11 @@ export default function JobCard({ job }: Props) {
   const companyName = job.company?.trim() || ''
   const isPinned = isEffectivePinned(job, Date.now())
   return (
-    <Link href={`/jobs/${job.id}`}>
-      <div className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100">
+    <Link
+      href={`/jobs/${job.id}`}
+      className="block rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden hover:bg-zinc-50 transition"
+    >
+      <div className="p-4">
         <div className="flex justify-between items-start gap-3">
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-gray-900 text-lg line-clamp-2">{job.title}</h3>
