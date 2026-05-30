@@ -85,6 +85,7 @@ async function fetchOwnerPostSitemapEntries(
   let query = supabase
     .from(options.table)
     .select('id, user_id, updated_at, created_at')
+    .eq('admin_hidden', false)
     .order('updated_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .limit(DYNAMIC_SITEMAP_LIMIT)
