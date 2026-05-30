@@ -514,7 +514,7 @@ function AdsAdminContent() {
 
   if (!token) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-5xl px-4 py-8">
         <Link
           href="/admin"
           className="mb-4 inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
@@ -553,7 +553,7 @@ function AdsAdminContent() {
   const uploadDisabled = uploading || isImageLocked || deletingImage || (hasImage && imageSourceLock !== 'uploaded')
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="mx-auto max-w-5xl px-4 py-8">
       <Link
         href="/admin"
         className="mb-4 inline-flex items-center rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
