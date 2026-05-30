@@ -50,6 +50,12 @@ function displayPrice(item: SecondhandItem) {
   return `$${price}`
 }
 
+function normalizeTag(value: string | null | undefined): string | null {
+  const text = (value || '').trim()
+  if (!text || text === '-' || text === '\u2014') return null
+  return text
+}
+
 function isAdminHidden(item: SecondhandItem) {
   return item.status === 'hidden' && item.admin_hidden === true
 }
@@ -196,16 +202,16 @@ export default function MyItemsPage() {
   if (loading) return <div className="flex justify-center py-20 text-gray-500">加载中...</div>
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
       <DetailBackButton fallbackHref="/profile" />
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">我的商品</h1>
           <p className="text-sm text-gray-500 mt-1">管理您发布的二手出售与求购信息</p>
         </div>
         <Link
           href="/secondhand/publish"
-          className="h-10 px-4 flex items-center text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
+          className="h-10 shrink-0 whitespace-nowrap px-4 flex items-center text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
         >
           + 发布商品
         </Link>
@@ -226,6 +232,7 @@ export default function MyItemsPage() {
         <div className="space-y-4">
           {items.map((item) => {
             const loc = getItemLocation(item)
+            const category = normalizeTag(item.category)
 
             return (
               <div
@@ -235,7 +242,7 @@ export default function MyItemsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 truncate max-w-[260px] sm:max-w-[520px]">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2">
                         {item.title}
                       </h3>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadgeClass(item)}`}>
@@ -246,9 +253,9 @@ export default function MyItemsPage() {
                       >
                         {typeLabel(item.type)}
                       </span>
-                      {item.category ? (
+                      {category ? (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
-                          {item.category}
+                          {category}
                         </span>
                       ) : null}
                     </div>

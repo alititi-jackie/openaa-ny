@@ -41,6 +41,12 @@ function displayPrice(p: number): string | null {
   return `$${price}`
 }
 
+function normalizeRoomType(value: string | null | undefined): string | null {
+  const text = (value || '').trim()
+  if (!text || text === '-' || text === '\u2014') return null
+  return text
+}
+
 function isAdminHidden(post: HousingPost) {
   return post.status === 'hidden' && post.admin_hidden === true
 }
@@ -192,16 +198,16 @@ export default function MyHousingPage() {
   if (loading) return <div className="flex justify-center py-20 text-gray-500">加载中...</div>
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
       <DetailBackButton fallbackHref="/profile" />
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">我的房屋</h1>
           <p className="text-sm text-gray-500 mt-1">管理您发布的房屋出租与求租信息</p>
         </div>
         <Link
           href="/housing/publish"
-          className="h-10 px-4 flex items-center text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
+          className="h-10 shrink-0 whitespace-nowrap px-4 flex items-center text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
         >
           + 发布房源
         </Link>
@@ -222,12 +228,13 @@ export default function MyHousingPage() {
         <div className="space-y-4">
           {posts.map((p) => {
             const priceStr = displayPrice(p.price)
+            const roomType = normalizeRoomType(p.room_type)
             return (
               <div key={p.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 truncate max-w-[260px] sm:max-w-[520px]">
+                      <h3 className="font-semibold text-gray-900 line-clamp-2">
                         {p.title || (p.type === 'seeking' ? '求租' : '房屋出租')}
                       </h3>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadgeClass(p)}`}>
@@ -236,9 +243,9 @@ export default function MyHousingPage() {
                       <span className={`text-xs px-2 py-0.5 rounded-full ${typeBadgeClass(p.type)}`}>
                         {typeLabel(p.type)}
                       </span>
-                      {p.room_type ? (
+                      {roomType ? (
                         <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
-                          {p.room_type}
+                          {roomType}
                         </span>
                       ) : null}
                     </div>

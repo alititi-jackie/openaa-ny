@@ -44,6 +44,12 @@ function statusBadgeClass(post: ServicePost) {
   return 'bg-blue-50 text-blue-700 ring-1 ring-blue-100'
 }
 
+function normalizeTag(value: string | null | undefined): string | null {
+  const text = (value || '').trim()
+  if (!text || text === '-' || text === '\u2014') return null
+  return text
+}
+
 export default function MyServicesPage() {
   const router = useRouter()
   const [posts, setPosts] = useState<ServicePost[]>([])
@@ -165,16 +171,16 @@ export default function MyServicesPage() {
   if (loading) return <div className="flex justify-center py-20 text-gray-500">加载中...</div>
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
       <DetailBackButton fallbackHref="/profile" />
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">我的服务</h1>
           <p className="text-sm text-gray-500 mt-1">管理您发布的本地服务信息</p>
         </div>
         <Link
           href="/services/publish"
-          className="h-10 px-4 flex items-center text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
+          className="h-10 shrink-0 whitespace-nowrap px-4 flex items-center text-sm text-blue-600 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition"
         >
           + 发布服务
         </Link>
@@ -193,20 +199,24 @@ export default function MyServicesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {posts.map((post) => (
+          {posts.map((post) => {
+            const category = normalizeTag(post.category)
+            return (
             <div key={post.id} className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-gray-900 truncate max-w-[240px] sm:max-w-[480px]">
+                    <h3 className="font-semibold text-gray-900 line-clamp-2">
                       {post.title}
                     </h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${statusBadgeClass(post)}`}>
                       {statusLabel(post)}
                     </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
-                      {post.category}
-                    </span>
+                    {category ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-50 text-zinc-600 ring-1 ring-zinc-100">
+                        {category}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="mt-2 text-sm text-gray-600 flex flex-wrap gap-x-4 gap-y-1">
                     {post.location ? <span>📍 {post.location}</span> : null}
@@ -259,7 +269,8 @@ export default function MyServicesPage() {
                 </button>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
       <BackToTopButton />
