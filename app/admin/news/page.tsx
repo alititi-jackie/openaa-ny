@@ -6,11 +6,19 @@ import type { NewsPost } from '@/types'
 import { NEWS_CATEGORIES, NEWS_FILTER_CATEGORIES, NEWS_SLUG_REGEX } from '@/lib/news'
 import type { NewsFilterCategory } from '@/lib/news'
 import { clearAdminToken, getAdminToken, setAdminToken } from '@/lib/adminToken'
+import { compressImageFile } from '@/lib/compressImage'
 import BackToTopButton from '@/components/BackToTopButton'
 import { useAutoMessage } from '@/hooks/useAutoMessage'
 
 type StatusFilter = '全部状态' | '已发布' | '未发布'
 type CoverSource = 'uploaded' | 'external'
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const NEWS_COVER_COMPRESS_OPTIONS = {
+  maxWidth: 1200,
+  maxHeight: 675,
+  quality: 0.8,
+}
 
 const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: '全部状态', label: '全部状态' },
@@ -249,7 +257,7 @@ export default function AdminNewsPage() {
       setUploadMessage('图片格式仅支持 JPG、PNG、WEBP')
       return
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
       setUploadMessage('图片大小不能超过 5MB')
       return
     }
@@ -257,11 +265,17 @@ export default function AdminNewsPage() {
     setUploading(true)
     setUploadMessage('上传中...')
 
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('slug', form.slug.trim())
-
     try {
+      const compressedFile = await compressImageFile(file, NEWS_COVER_COMPRESS_OPTIONS)
+      if (compressedFile.size > MAX_IMAGE_SIZE_BYTES) {
+        setUploadMessage('压缩后图片大小不能超过 5MB')
+        return
+      }
+
+      const fd = new FormData()
+      fd.append('file', compressedFile)
+      fd.append('slug', form.slug.trim())
+
       const res = await fetch('/api/admin/news/upload-cover', {
         method: 'POST',
         headers: { 'x-admin-token': token },
@@ -284,7 +298,7 @@ export default function AdminNewsPage() {
       setCoverSourceLock('uploaded')
       setUploadMessage('封面图上传成功')
     } catch {
-      setUploadMessage('上传失败，请重试')
+      setUploadMessage('图片处理或上传失败，请换一张图片后重试')
     } finally {
       setUploading(false)
     }
@@ -690,7 +704,9 @@ export default function AdminNewsPage() {
                   : '已使用外部图片链接，如需上传图片，请先删除当前图片。'}
               </p>
             ) : (
-              <p className="text-xs text-gray-500">如需更换封面图，请先删除当前图片。</p>
+              <p className="text-xs text-gray-500">
+                如需更换封面图，请先删除当前图片。推荐 1200×675，建议使用 WebP/JPG，单张建议小于 500KB。
+              </p>
             )}
             {isCoverLocked && hasCoverImage ? (
               <button

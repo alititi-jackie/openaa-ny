@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { clearAdminToken, getAdminToken, setAdminToken } from '@/lib/adminToken'
+import { compressImageFile } from '@/lib/compressImage'
 import {
   AD_EXTERNAL_URL_ERROR,
   AD_IMAGE_REQUIRED_ERROR,
@@ -50,6 +51,13 @@ const POSITION_FILTERS: { key: PositionFilter, label: string }[] = [
 ]
 
 type StatusFilter = 'all' | 'active' | 'inactive'
+
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const AD_IMAGE_COMPRESS_OPTIONS = {
+  maxWidth: 1500,
+  maxHeight: 500,
+  quality: 0.8,
+}
 
 const STATUS_FILTERS: { key: StatusFilter, label: string }[] = [
   { key: 'all', label: '全部状态' },
@@ -243,7 +251,7 @@ function AdsAdminContent() {
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
       setUploadMessage('图片大小不能超过 5MB')
       return
     }
@@ -251,11 +259,17 @@ function AdsAdminContent() {
     setUploading(true)
     setUploadMessage('上传中...')
 
-    const form = new FormData()
-    form.append('file', file)
-    if (slug.trim()) form.append('slug', slug.trim())
-
     try {
+      const compressedFile = await compressImageFile(file, AD_IMAGE_COMPRESS_OPTIONS)
+      if (compressedFile.size > MAX_IMAGE_SIZE_BYTES) {
+        setUploadMessage('压缩后图片大小不能超过 5MB')
+        return
+      }
+
+      const form = new FormData()
+      form.append('file', compressedFile)
+      if (slug.trim()) form.append('slug', slug.trim())
+
       const res = await fetch('/api/admin/ads/upload-image', {
         method: 'POST',
         headers: { 'x-admin-token': token },
@@ -280,7 +294,7 @@ function AdsAdminContent() {
       setImageSourceLock('uploaded')
       setUploadMessage('广告图片上传成功')
     } catch {
-      setUploadMessage('上传失败，请重试')
+      setUploadMessage('图片处理或上传失败，请换一张图片后重试')
     } finally {
       setUploading(false)
     }
@@ -672,7 +686,9 @@ function AdsAdminContent() {
                 : '已使用外部图片链接，如需上传图片，请先删除当前图片。'}
             </p>
           ) : (
-            <p className="text-xs text-gray-500">上传图片与外部链接二选一。若已存在图片，请先删除后再更换。</p>
+            <p className="text-xs text-gray-500">
+              上传图片与外部链接二选一。若已存在图片，请先删除后再更换。推荐 1200×420 或 1500×500，建议使用 WebP/JPG，单张建议小于 500KB。
+            </p>
           )}
 
           {isImageLocked && hasImage ? (
