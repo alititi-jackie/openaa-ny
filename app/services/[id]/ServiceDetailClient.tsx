@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import PostSafetyNotice from '@/components/PostSafetyNotice'
 import AdminReturnButton from '@/components/AdminReturnButton'
 import DetailBackButton from '@/components/DetailBackButton'
@@ -22,6 +23,23 @@ function formatDate(s: string | null) {
     })
   } catch {
     return s
+  }
+}
+
+const SERVICE_DETAIL_IMAGE_SIZES = '(min-width: 768px) 672px, 100vw'
+const SERVICE_LIGHTBOX_IMAGE_SIZES = '(min-width: 1024px) 1024px, 100vw'
+
+function canUseNextImage(src: string) {
+  if (src.startsWith('/')) return true
+  try {
+    const hostname = new URL(src).hostname
+    return (
+      hostname === 'img.openaa.com' ||
+      hostname.endsWith('.supabase.co') ||
+      hostname.endsWith('.googleusercontent.com')
+    )
+  } catch {
+    return false
   }
 }
 
@@ -121,12 +139,24 @@ export default function ServiceDetailClient({ post }: { post: ServicePost | null
             className="block w-full h-full"
             aria-label="查看大图"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images[imgIdx]}
-              alt={`${post.title} 图片 ${imgIdx + 1}`}
-              className="w-full h-full object-contain object-center"
-            />
+            {canUseNextImage(images[imgIdx]) ? (
+              <Image
+                key={images[imgIdx]}
+                src={images[imgIdx]}
+                alt={`${post.title} 图片 ${imgIdx + 1}`}
+                fill
+                sizes={SERVICE_DETAIL_IMAGE_SIZES}
+                className="object-contain object-center"
+                priority
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={images[imgIdx]}
+                alt={`${post.title} 图片 ${imgIdx + 1}`}
+                className="h-full w-full object-contain object-center"
+              />
+            )}
           </button>
           {imageCount > 1 && (
             <>
@@ -283,12 +313,23 @@ export default function ServiceDetailClient({ post }: { post: ServicePost | null
               </>
             )}
 
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images[imgIdx]}
-              alt={`${post.title} 图片 ${imgIdx + 1}`}
-              className="absolute inset-0 w-full h-full object-contain"
-            />
+            {canUseNextImage(images[imgIdx]) ? (
+              <Image
+                key={images[imgIdx]}
+                src={images[imgIdx]}
+                alt={`${post.title} 图片 ${imgIdx + 1}`}
+                fill
+                sizes={SERVICE_LIGHTBOX_IMAGE_SIZES}
+                className="object-contain"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={images[imgIdx]}
+                alt={`${post.title} 图片 ${imgIdx + 1}`}
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            )}
 
             {imageCount >= 2 && (
               <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2 z-10">
