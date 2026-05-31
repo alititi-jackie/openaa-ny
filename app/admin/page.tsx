@@ -14,14 +14,20 @@ type AdminEntry = {
   href?: string
 }
 
+type AdminEntryGroup = {
+  title: string
+  description: string
+  entryIds: string[]
+}
+
 const ADMIN_ENTRIES: AdminEntry[] = [
   {
-    id: 'feedback',
-    icon: '🛎️',
-    title: '反馈与举报',
-    description: '查看用户反馈、举报、新闻线索和问题建议。',
+    id: 'posts',
+    icon: '🗂️',
+    title: '帖子管理',
+    description: '统一管理招聘、房屋、二手帖子，支持隐藏、恢复与删除。',
     status: '已可用',
-    href: '/admin/feedback',
+    href: '/admin/posts',
   },
   {
     id: 'news',
@@ -32,12 +38,20 @@ const ADMIN_ENTRIES: AdminEntry[] = [
     href: '/admin/news',
   },
   {
-    id: 'ads',
-    icon: '📢',
-    title: '广告管理',
-    description: '管理首页、招聘、房屋、二手、导航、新闻等广告位。',
+    id: 'services',
+    icon: '🧰',
+    title: '本地服务管理',
+    description: '管理用户发布的本地服务信息。',
     status: '已可用',
-    href: '/admin/ads',
+    href: '/admin/services',
+  },
+  {
+    id: 'navigation',
+    icon: '🗺️',
+    title: '导航管理',
+    description: '管理公共导航页面的分类和网址内容。',
+    status: '已可用',
+    href: '/admin/navigation',
   },
   {
     id: 'top-links',
@@ -50,50 +64,10 @@ const ADMIN_ENTRIES: AdminEntry[] = [
   {
     id: 'home-sections',
     icon: '🧩',
-    title: '首页最新发布',
+    title: '首页板块管理',
     description: '管理首页最新招聘、房屋、二手、本地服务、新闻板块显示和排序。',
     status: '已可用',
     href: '/admin/home-sections',
-  },
-  {
-    id: 'posts',
-    icon: '🗂️',
-    title: '帖子管理',
-    description: '统一管理招聘、房屋、二手帖子，支持隐藏、恢复与删除。',
-    status: '已可用',
-    href: '/admin/posts',
-  },
-  {
-    id: 'services',
-    icon: '🧰',
-    title: '本地服务管理',
-    description: '管理用户发布的本地服务信息。',
-    status: '已可用',
-    href: '/admin/services',
-  },
-  {
-    id: 'image-cleanup',
-    icon: '🧹',
-    title: '图片清理工具',
-    description: '扫描未使用图片，管理员确认后删除。',
-    status: '已可用',
-    href: '/admin/image-cleanup',
-  },
-  {
-    id: 'navigation',
-    icon: '🗺️',
-    title: '导航管理',
-    description: '管理公共导航页面的分类和网址内容。',
-    status: '已可用',
-    href: '/admin/navigation',
-  },
-  {
-    id: 'settings',
-    icon: '⚙️',
-    title: '站点设置 / 发帖上限',
-    description: '管理每日发帖上限等基础配置。',
-    status: '已可用',
-    href: '/admin/settings',
   },
   {
     id: 'users',
@@ -104,12 +78,62 @@ const ADMIN_ENTRIES: AdminEntry[] = [
     href: '/admin/users',
   },
   {
+    id: 'feedback',
+    icon: '🛎️',
+    title: '反馈与举报',
+    description: '查看用户反馈、举报、新闻线索和问题建议。',
+    status: '已可用',
+    href: '/admin/feedback',
+  },
+  {
     id: 'notifications',
     icon: '🔔',
     title: '通知管理',
     description: '查看已发送通知、已读状态和删除通知。',
     status: '已可用',
     href: '/admin/notifications',
+  },
+  {
+    id: 'ads',
+    icon: '📢',
+    title: '广告管理',
+    description: '管理首页、招聘、房屋、二手、导航、新闻等广告位。',
+    status: '已可用',
+    href: '/admin/ads',
+  },
+  {
+    id: 'image-cleanup',
+    icon: '🧹',
+    title: '图片清理工具',
+    description: '扫描未使用图片，管理员确认后删除。',
+    status: '已可用',
+    href: '/admin/image-cleanup',
+  },
+  {
+    id: 'settings',
+    icon: '⚙️',
+    title: '站点设置',
+    description: '管理每日发帖上限等基础配置。',
+    status: '已可用',
+    href: '/admin/settings',
+  },
+]
+
+const ADMIN_ENTRY_GROUPS: AdminEntryGroup[] = [
+  {
+    title: '内容管理',
+    description: '管理前台展示内容、频道信息和首页板块。',
+    entryIds: ['posts', 'news', 'services', 'navigation', 'top-links', 'home-sections'],
+  },
+  {
+    title: '用户与安全',
+    description: '管理用户状态、反馈举报和通知。',
+    entryIds: ['users', 'feedback', 'notifications'],
+  },
+  {
+    title: '运营设置',
+    description: '管理广告、图片和站点规则。',
+    entryIds: ['ads', 'image-cleanup', 'settings'],
   },
 ]
 
@@ -120,6 +144,59 @@ const ROADMAP_ITEMS = [
   '全站置顶管理',
   'SEO 工具',
 ]
+
+const ADMIN_ENTRIES_BY_ID = new Map(ADMIN_ENTRIES.map((entry) => [entry.id, entry]))
+
+function AdminEntryCard({
+  entry,
+  totalUsers,
+}: {
+  entry: AdminEntry
+  totalUsers: number | null
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-lg leading-none">{entry.icon}</p>
+          <h2 className="mt-2 text-base font-semibold text-zinc-900">{entry.title}</h2>
+          <p className="mt-1 text-sm text-zinc-600">{entry.description}</p>
+          {entry.id === 'users' ? (
+            <p className="mt-2 text-sm text-zinc-500">
+              总用户：{totalUsers === null ? '--' : totalUsers}
+            </p>
+          ) : null}
+        </div>
+        <span
+          className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${
+            entry.status === '已可用'
+              ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
+              : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
+          }`}
+        >
+          {entry.status}
+        </span>
+      </div>
+
+      {entry.status === '已可用' && entry.href ? (
+        <Link
+          href={entry.href}
+          className="mt-3 inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100"
+        >
+          进入
+        </Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="mt-3 inline-flex cursor-not-allowed items-center rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-400"
+        >
+          待开发
+        </button>
+      )}
+    </div>
+  )
+}
 
 export default function AdminHomePage() {
   const [tokenInput, setTokenInput] = useState('')
@@ -225,51 +302,22 @@ export default function AdminHomePage() {
         </div>
       ) : (
         <>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {ADMIN_ENTRIES.map((entry) => {
-              return (
-                <div key={entry.id} className="rounded-2xl border border-zinc-200 bg-white p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-lg leading-none">{entry.icon}</p>
-                      <h2 className="mt-2 text-base font-semibold text-zinc-900">{entry.title}</h2>
-                      <p className="mt-1 text-sm text-zinc-600">{entry.description}</p>
-                      {entry.id === 'users' ? (
-                        <p className="mt-2 text-sm text-zinc-500">
-                          总用户：{totalUsers === null ? '--' : totalUsers}
-                        </p>
-                      ) : null}
-                    </div>
-                    <span
-                      className={`inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${
-                        entry.status === '已可用'
-                          ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
-                          : 'bg-zinc-100 text-zinc-600 ring-zinc-200'
-                      }`}
-                    >
-                      {entry.status}
-                    </span>
-                  </div>
-
-                  {entry.status === '已可用' && entry.href ? (
-                    <Link
-                      href={entry.href}
-                      className="mt-3 inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100"
-                    >
-                      进入
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled
-                      className="mt-3 inline-flex cursor-not-allowed items-center rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1.5 text-sm font-medium text-zinc-400"
-                    >
-                      待开发
-                    </button>
-                  )}
+          <div className="mt-4 space-y-5">
+            {ADMIN_ENTRY_GROUPS.map((group) => (
+              <section key={group.title}>
+                <div>
+                  <h2 className="text-lg font-semibold text-zinc-900">{group.title}</h2>
+                  <p className="mt-1 text-sm text-zinc-600">{group.description}</p>
                 </div>
-              )
-            })}
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {group.entryIds.map((entryId) => {
+                    const entry = ADMIN_ENTRIES_BY_ID.get(entryId)
+                    if (!entry) return null
+                    return <AdminEntryCard key={entry.id} entry={entry} totalUsers={totalUsers} />
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
 
           <section className="mt-5 rounded-2xl border border-zinc-200 bg-white p-4">
