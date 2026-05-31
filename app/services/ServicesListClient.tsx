@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import AppTopSection from '@/components/AppTopSection'
 import HorizontalCategoryTabs from '@/components/HorizontalCategoryTabs'
 import BackToTopButton from '@/components/BackToTopButton'
@@ -54,6 +55,22 @@ type ServicesApiResponse = {
   error?: string
 }
 
+const SERVICE_THUMB_SIZES = '(min-width: 768px) 420px, 100vw'
+
+function canUseNextImage(src: string) {
+  if (src.startsWith('/')) return true
+  try {
+    const hostname = new URL(src).hostname
+    return (
+      hostname === 'img.openaa.com' ||
+      hostname.endsWith('.supabase.co') ||
+      hostname.endsWith('.googleusercontent.com')
+    )
+  } catch {
+    return false
+  }
+}
+
 function ServiceCard({ post }: { post: ServicePost }) {
   const thumb = post.images?.[0] ?? null
   const isPinned = isEffectivePinned(post, Date.now())
@@ -63,8 +80,21 @@ function ServiceCard({ post }: { post: ServicePost }) {
       className="block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition"
     >
       {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt={post.title} className="w-full h-36 object-cover" />
+        <div className="relative h-36 w-full bg-zinc-100">
+          {canUseNextImage(thumb) ? (
+            <Image
+              src={thumb}
+              alt={post.title}
+              fill
+              sizes={SERVICE_THUMB_SIZES}
+              className="object-cover"
+              loading="lazy"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt={post.title} className="h-full w-full object-cover" loading="lazy" />
+          )}
+        </div>
       ) : (
         <div className="w-full h-36 bg-zinc-50 flex items-center justify-center text-3xl select-none" aria-hidden="true">
           🛠️

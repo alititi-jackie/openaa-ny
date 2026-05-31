@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Autoplay, Pagination } from 'swiper/modules'
 import 'swiper/css'
@@ -28,6 +29,22 @@ function normalizeImageUrl(v: unknown): string {
   return ''
 }
 
+const BANNER_IMAGE_SIZES = '(min-width: 1040px) 1040px, 100vw'
+
+function canUseNextImage(src: string) {
+  if (src.startsWith('/')) return true
+  try {
+    const hostname = new URL(src).hostname
+    return (
+      hostname === 'img.openaa.com' ||
+      hostname.endsWith('.supabase.co') ||
+      hostname.endsWith('.googleusercontent.com')
+    )
+  } catch {
+    return false
+  }
+}
+
 export default function BannerCarousel({ position = 'home' }: Props) {
   const [slides, setSlides] = useState<AdSlide[]>([])
 
@@ -48,23 +65,36 @@ export default function BannerCarousel({ position = 'home' }: Props) {
       })
   }, [position])
 
-  const renderSlideContent = (slide: AdSlide) => {
+  const renderSlideContent = (slide: AdSlide, index: number) => {
     const imageUrl = normalizeImageUrl(slide.image_url)
+    const isFirstSlide = index === 0
 
     // If we somehow have no image url, render nothing (should not happen after filtering)
     if (!imageUrl) return null
 
     // Standardized ratio close to 3:1, recommended 1500x500
     const image = (
-      <div className="w-full">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={imageUrl}
-          alt=""
-          className="w-full h-[160px] sm:h-[180px] md:h-[200px] object-cover bg-zinc-100 select-none"
-          draggable={false}
-          loading="eager"
-        />
+      <div className="relative w-full h-[160px] sm:h-[180px] md:h-[200px] bg-zinc-100">
+        {canUseNextImage(imageUrl) ? (
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            sizes={BANNER_IMAGE_SIZES}
+            className="object-cover select-none"
+            draggable={false}
+            {...(isFirstSlide ? { priority: true } : { loading: 'lazy' as const })}
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            className="h-full w-full object-cover select-none"
+            draggable={false}
+            loading={isFirstSlide ? 'eager' : 'lazy'}
+          />
+        )}
       </div>
     )
 
@@ -139,8 +169,8 @@ export default function BannerCarousel({ position = 'home' }: Props) {
           touchRatio={1}
           className="banner-swiper"
         >
-          {slides.map((slide) => (
-            <SwiperSlide key={slide.id}>{renderSlideContent(slide)}</SwiperSlide>
+          {slides.map((slide, index) => (
+            <SwiperSlide key={slide.id}>{renderSlideContent(slide, index)}</SwiperSlide>
           ))}
         </Swiper>
       </div>
